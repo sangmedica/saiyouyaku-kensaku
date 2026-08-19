@@ -158,9 +158,14 @@
     gap: 8px;
     overflow-x: auto;
     padding: 2px 16px 12px;
-    scrollbar-width: none;
+    scrollbar-width: thin;
   }
-  .chips::-webkit-scrollbar { display: none; }
+  @media (min-width: 620px) {
+    .chips {
+      flex-wrap: wrap;
+      overflow-x: visible;
+    }
+  }
   .chip {
     flex: 0 0 auto;
     border: 1px solid var(--line);
@@ -519,6 +524,14 @@ clearBtn.addEventListener("click", () => {
 window.addEventListener("scroll", () => {
   topbarEl.classList.toggle("scrolled", window.scrollY > 2);
 }, { passive: true });
+
+// マウスホイールの縦スクロールを横スクロールに変換(トラックパッドがない環境向け)
+chipsEl.addEventListener("wheel", (e) => {
+  if (chipsEl.scrollWidth <= chipsEl.clientWidth) return; // 折り返し表示中は不要
+  if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+  e.preventDefault();
+  chipsEl.scrollLeft += e.deltaY;
+}, { passive: false });
 
 renderChips();
 renderList();
