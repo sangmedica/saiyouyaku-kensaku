@@ -1,0 +1,524 @@
+<meta charset="UTF-8">
+<title>採用薬検索 TMC</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  :root {
+    --bg: #F5F8F6;
+    --surface: #FFFFFF;
+    --surface-alt: #E7F0EC;
+    --ink: #16261F;
+    --ink-muted: #5C6E66;
+    --accent: #0E7C66;
+    --accent-strong: #0B6552;
+    --accent-ink: #FFFFFF;
+    --line: #DDE7E2;
+    --chip-bg: #EAF1EE;
+    --chip-ink: #33473F;
+    --shadow: 0 -8px 30px rgba(15, 35, 28, 0.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0D1512;
+      --surface: #16211D;
+      --surface-alt: #1C2A24;
+      --ink: #EAF3EF;
+      --ink-muted: #9AB0A6;
+      --accent: #3FD1AE;
+      --accent-strong: #59DDBC;
+      --accent-ink: #06231C;
+      --line: #28352F;
+      --chip-bg: #1C2A24;
+      --chip-ink: #BFE0D4;
+      --shadow: 0 -8px 30px rgba(0, 0, 0, 0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0D1512;
+    --surface: #16211D;
+    --surface-alt: #1C2A24;
+    --ink: #EAF3EF;
+    --ink-muted: #9AB0A6;
+    --accent: #3FD1AE;
+    --accent-strong: #59DDBC;
+    --accent-ink: #06231C;
+    --line: #28352F;
+    --chip-bg: #1C2A24;
+    --chip-ink: #BFE0D4;
+    --shadow: 0 -8px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "Yu Gothic UI", "Hiragino Sans", "Helvetica Neue", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body { overflow-x: hidden; }
+
+  .app {
+    max-width: 560px;
+    margin: 0 auto;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--bg);
+    padding: max(14px, env(safe-area-inset-top)) 16px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-bottom: 1px solid transparent;
+  }
+  .topbar.scrolled { border-bottom-color: var(--line); }
+
+  .brand {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .brand .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .brand h1 {
+    margin: 2px 0 0;
+    font-size: 21px;
+    font-weight: 750;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  .brand .count {
+    font-size: 12px;
+    color: var(--ink-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    padding-top: 4px;
+  }
+
+  .search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .search-wrap svg {
+    position: absolute;
+    left: 12px;
+    width: 17px;
+    height: 17px;
+    color: var(--ink-muted);
+    pointer-events: none;
+  }
+  #search {
+    width: 100%;
+    border: none;
+    border-radius: 12px;
+    background: var(--surface-alt);
+    color: var(--ink);
+    font-size: 16px;
+    padding: 11px 36px 11px 36px;
+    outline: none;
+    -webkit-appearance: none;
+  }
+  #search::placeholder { color: var(--ink-muted); }
+  #clearBtn {
+    position: absolute;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 50%;
+    background: var(--ink-muted);
+    color: var(--surface);
+    opacity: 0.55;
+    font-size: 13px;
+    line-height: 22px;
+    text-align: center;
+    padding: 0;
+    display: none;
+  }
+  #clearBtn.show { display: block; }
+
+  .chips {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 2px 16px 12px;
+    scrollbar-width: none;
+  }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: 0 0 auto;
+    border: 1px solid var(--line);
+    background: var(--chip-bg);
+    color: var(--chip-ink);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 13px;
+    border-radius: 999px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .chip .n {
+    font-variant-numeric: tabular-nums;
+    opacity: 0.65;
+    margin-left: 3px;
+  }
+  .chip.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+  }
+  .chip.active .n { opacity: 0.85; }
+
+  main { flex: 1; padding-bottom: 40px; }
+
+  .section-head {
+    position: sticky;
+    top: 96px;
+    z-index: 10;
+    background: var(--surface-alt);
+    color: var(--accent-strong);
+    font-size: 12.5px;
+    font-weight: 750;
+    letter-spacing: 0.02em;
+    padding: 7px 16px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+  }
+  .row:active { background: var(--surface-alt); }
+  .row .name { font-size: 15.5px; font-weight: 650; }
+  .row .kana { font-size: 12px; color: var(--ink-muted); }
+  .row .active-ing { font-size: 12.5px; color: var(--ink-muted); }
+  .row .indication {
+    font-size: 12.5px;
+    color: var(--accent-strong);
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .row .group-tag {
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-top: 1px;
+  }
+
+  .empty {
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--ink-muted);
+    font-size: 14px;
+  }
+
+  /* bottom sheet */
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(6, 15, 12, 0.42);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
+    z-index: 30;
+  }
+  .backdrop.open { opacity: 1; pointer-events: auto; }
+
+  .sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-width: 560px;
+    margin: 0 auto;
+    background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    box-shadow: var(--shadow);
+    transform: translateY(100%);
+    transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+    z-index: 31;
+    max-height: 84vh;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .sheet.open { transform: translateY(0); }
+
+  .sheet-handle {
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--line);
+    margin: 10px auto 4px;
+  }
+
+  .sheet-body { overflow-y: auto; padding: 4px 20px 28px; }
+
+  .sheet-tag {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--accent-strong);
+    background: var(--surface-alt);
+    border-radius: 999px;
+    padding: 4px 11px;
+    margin-top: 8px;
+  }
+  .sheet-body h2 {
+    font-size: 20px;
+    font-weight: 750;
+    margin: 12px 0 2px;
+    text-wrap: balance;
+  }
+  .sheet-body .kana {
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+
+  .field {
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
+  }
+  .field:first-of-type { border-top: none; margin-top: 6px; }
+  .field .label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .field .value {
+    font-size: 15px;
+    margin-top: 3px;
+    line-height: 1.45;
+  }
+  .field.indication .value { color: var(--accent-strong); font-weight: 600; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sheet, .backdrop { transition: none; }
+  }
+</style>
+
+<div class="app">
+  <header class="topbar" id="topbar">
+    <div class="brand">
+      <div>
+        <div class="eyebrow">T-MATSUOKA Medical Center</div>
+        <h1>採用薬検索</h1>
+      </div>
+      <div class="count" id="resultCount"></div>
+    </div>
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input id="search" type="text" inputmode="search" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="薬品名・カタカナ・有効成分・適応疾患で検索">
+      <button id="clearBtn" aria-label="クリア">&#10005;</button>
+    </div>
+  </header>
+
+  <div class="chips" id="chips"></div>
+
+  <main id="list"></main>
+</div>
+
+<div class="backdrop" id="backdrop"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true">
+  <div class="sheet-handle"></div>
+  <div class="sheet-body" id="sheetBody"></div>
+</div>
+
+<script>
+const DRUGS = [{"id": 1, "group": "循環器", "code": "22.NT.0208", "name": "Adalat LA 30mg", "nameKana": "アダラート", "activeIngredient": "Nifedipine", "content": "30 mg", "usage": "内服", "origin": "ドイツ", "indication": "高血圧症、狭心症"}, {"id": 2, "group": "循環器", "code": "22.NT.0201", "name": "Amlor CAP", "nameKana": "アムロールカプセル", "activeIngredient": "Amlodipin", "content": "5mg", "usage": "内服", "origin": "アメリカ", "indication": "高血圧症、狭心症"}, {"id": 3, "group": "循環器", "code": "22.NT.0223", "name": "Aprovel 150 mg", "nameKana": "アプロベル", "activeIngredient": "Irbesartan", "content": "150 mg", "usage": "内服", "origin": "フランス", "indication": "高血圧症"}, {"id": 4, "group": "循環器", "code": "22.NT.0177", "name": "Aspilets EC", "nameKana": "アスピレッツ", "activeIngredient": "Acetylsalicylic acid", "content": "80 mg", "usage": "内服", "origin": "ベトナム", "indication": "血栓予防（抗血小板作用）、疼痛・発熱"}, {"id": 5, "group": "循環器", "code": "22.NT.0226", "name": "Betaloc Zok 25mg", "nameKana": "ベタロックゾック", "activeIngredient": "Metoprolol", "content": "25 mg", "usage": "内服", "origin": "スウェーデン", "indication": "高血圧症、狭心症、不整脈、心不全"}, {"id": 6, "group": "循環器", "code": "22.NT.0227", "name": "Betaloc Zok 50mg", "nameKana": "ベタロックゾック", "activeIngredient": "Metoprolol", "content": "50 mg", "usage": "内服", "origin": "スウェーデン", "indication": "高血圧症、狭心症、不整脈、心不全"}, {"id": 7, "group": "循環器", "code": "22.NT.0713", "name": "Captopril STELLA 25mg", "nameKana": "カプトプリルステラ", "activeIngredient": "Captopril", "content": "25mg", "usage": "内服", "origin": "ベトナム", "indication": "高血圧症、心不全"}, {"id": 8, "group": "循環器", "code": "DT05477", "name": "Cavinton Forte 10mg (Vinpocetine)", "nameKana": "カビントンフォルテ", "activeIngredient": "Vinpocetine", "content": "10mg", "usage": "内服", "origin": "ハンガリー", "indication": "脳循環改善（脳血管障害後遺症に伴うめまい等）"}, {"id": 9, "group": "循環器", "code": "22.NT.0224", "name": "CoAprovel 150/12,5mg", "nameKana": "コアプロベル", "activeIngredient": "Irbesartan, Hydrochlorothiazid 150/12,5mg", "content": "", "usage": "内服", "origin": "フランス", "indication": "高血圧症（配合利尿薬）"}, {"id": 10, "group": "循環器", "code": "22.NT.0229", "name": "Concor 5mg", "nameKana": "コンコール", "activeIngredient": "Bisoprolol", "content": "5mg", "usage": "内服", "origin": "ドイツ", "indication": "高血圧症、狭心症、心不全、頻脈性不整脈"}, {"id": 11, "group": "循環器", "code": "22.NT.0143.", "name": "Concor COR 2,5mg", "nameKana": "コンコールコア", "activeIngredient": "Bisoprolol", "content": "2.5mg", "usage": "内服", "origin": "ドイツ", "indication": "高血圧症、狭心症、心不全、頻脈性不整脈"}, {"id": 12, "group": "循環器", "code": "22.NT.0579", "name": "Cordarone 200mg", "nameKana": "コルダロン", "activeIngredient": "Amiodaron", "content": "", "usage": "内服", "origin": "ドイツ", "indication": "頻脈性不整脈（抗不整脈薬）"}, {"id": 13, "group": "循環器", "code": "22.NT.0535.", "name": "Coveram 10mg/10mg", "nameKana": "コベラム", "activeIngredient": "Perindopril Arginine/ Amlodipine", "content": "", "usage": "内服", "origin": "アイルランド", "indication": "高血圧症（配合剤）"}, {"id": 14, "group": "循環器", "code": "22.NT.0239", "name": "Coveram 10mg/5mg", "nameKana": "コベラム", "activeIngredient": "Perindopril Arginine/ Amlodipine", "content": "", "usage": "内服", "origin": "アイルランド", "indication": "高血圧症（配合剤）"}, {"id": 15, "group": "循環器", "code": "22.NT.0238", "name": "Coveram 5mg/10mg", "nameKana": "コベラム", "activeIngredient": "Perindopril Arginine/ Amlodipine", "content": "", "usage": "内服", "origin": "アイルランド", "indication": "高血圧症（配合剤）"}, {"id": 16, "group": "循環器", "code": "22.NT.0237", "name": "Coveram 5mg/5mg", "nameKana": "コベラム", "activeIngredient": "Perindopril Arginine/ Amlodipine", "content": "", "usage": "内服", "origin": "アイルランド", "indication": "高血圧症（配合剤）"}, {"id": 17, "group": "循環器", "code": "22.NT.0243", "name": "Coversyl 10mg", "nameKana": "コバーシル", "activeIngredient": "Perindopril", "content": "10mg", "usage": "内服", "origin": "フランス", "indication": "高血圧症"}, {"id": 18, "group": "循環器", "code": "22.NT.0242", "name": "Coversyl 5mg", "nameKana": "コバーシル", "activeIngredient": "Perindopril", "content": "5mg", "usage": "内服", "origin": "フランス", "indication": "高血圧症"}, {"id": 19, "group": "循環器", "code": "22.NT.0245", "name": "Coversyl plus 5mg/1.25mg", "nameKana": "コバーシルプラス", "activeIngredient": "Perindopril, Indapamide", "content": "5mg/1.25mg", "usage": "内服", "origin": "フランス", "indication": "高血圧症（配合利尿薬）"}, {"id": 20, "group": "循環器", "code": "22.NT.0281", "name": "Cozaar 50mg", "nameKana": "コザール", "activeIngredient": "Losartan", "content": "50mg", "usage": "内服", "origin": "イギリス", "indication": "高血圧症"}, {"id": 21, "group": "循環器", "code": "22.NT.0631", "name": "Cozaar XQ 5mg/50mg", "nameKana": "コザールXQ", "activeIngredient": "Amlodipin + Losartan", "content": "", "usage": "内服", "origin": "イギリス", "indication": "高血圧症（配合剤）"}, {"id": 22, "group": "循環器", "code": "22.NT.0673", "name": "DigoxinQualy", "nameKana": "ジゴキシンクオリー", "activeIngredient": "Digoxin", "content": "0,25mg", "usage": "内服", "origin": "ベトナム", "indication": "心不全、頻脈性不整脈（心房細動）"}, {"id": 23, "group": "循環器", "code": "DT05315", "name": "Diltiazem Stella", "nameKana": "ジルチアゼムステラ", "activeIngredient": "Diltiazem", "content": "60mg", "usage": "内服", "origin": "ベトナム", "indication": "高血圧症、狭心症、不整脈"}, {"id": 24, "group": "循環器", "code": "22.NT.0254", "name": "Diovan 80mg", "nameKana": "ディオバン", "activeIngredient": "Valsartan", "content": "80mg", "usage": "内服", "origin": "スペイン", "indication": "高血圧症"}, {"id": 25, "group": "循環器", "code": "22.NT.0268", "name": "Dopegyt 250mg", "nameKana": "ドパジット", "activeIngredient": "Methyldopa", "content": "250mg", "usage": "内服", "origin": "ハンガリー", "indication": "高血圧症（妊娠高血圧を含む）"}, {"id": 26, "group": "循環器", "code": "22.NT.0181", "name": "Duoplavin", "nameKana": "デュオプラビン", "activeIngredient": "Clopidogrel, acetylsalicylic acid", "content": "75/100mg", "usage": "内服", "origin": "フランス", "indication": "血栓予防（抗血小板配合剤）"}, {"id": 27, "group": "循環器", "code": "22.NT.0256", "name": "Exforge 10mg/160mg", "nameKana": "エックスフォージ", "activeIngredient": "Amlodipin, Valsartan", "content": "", "usage": "内服", "origin": "スペイン", "indication": "高血圧症（配合剤）"}, {"id": 28, "group": "循環器", "code": "22.NT.0700", "name": "Exforge 5mg/80MG", "nameKana": "エックスフォージ", "activeIngredient": "Amlodipin + Valsartan", "content": "", "usage": "内服", "origin": "スペイン", "indication": "高血圧症（配合剤）"}, {"id": 29, "group": "循環器", "code": "22.NT.0282", "name": "Furosemide 40mg", "nameKana": "フロセミド", "activeIngredient": "Furosemid 40mg", "content": "40mg", "usage": "内服", "origin": "ベトナム", "indication": "浮腫、高血圧症、心不全（利尿薬）"}, {"id": 30, "group": "循環器", "code": "22.NT.0566", "name": "Lacipil 2mg", "nameKana": "ラシピル", "activeIngredient": "Lacidipine 2mg", "content": "", "usage": "内服", "origin": "イギリス", "indication": "高血圧症"}, {"id": 31, "group": "循環器", "code": "22.NT.0565", "name": "Lacipil 4mg", "nameKana": "ラシピル", "activeIngredient": "Lacidipine 4mg", "content": "", "usage": "内服", "origin": "イギリス", "indication": "高血圧症"}, {"id": 32, "group": "循環器", "code": "22.NT.0258", "name": "Micardis 40mg", "nameKana": "ミカルディス", "activeIngredient": "Telmisartan", "content": "40mg", "usage": "内服", "origin": "ドイツ", "indication": "高血圧症"}, {"id": 33, "group": "循環器", "code": "22.NT.0259", "name": "Micardis 80mg", "nameKana": "ミカルディス", "activeIngredient": "Telmisartan", "content": "80mg", "usage": "内服", "origin": "ドイツ", "indication": "高血圧症"}, {"id": 34, "group": "循環器", "code": "22.NT.0260", "name": "Micardis Plus 40mg/12.5mg", "nameKana": "ミカルディスプラス", "activeIngredient": "Telmisartan/ Hydrochlorothiazide", "content": "40mg/12.5mg", "usage": "内服", "origin": "ドイツ", "indication": "高血圧症（配合利尿薬）"}, {"id": 35, "group": "循環器", "code": "22.NT.0230", "name": "Nebilet 5mg", "nameKana": "ネビレット", "activeIngredient": "Nebivolol 5mg", "content": "5mg", "usage": "内服", "origin": "ドイツ", "indication": "高血圧症"}, {"id": 36, "group": "循環器", "code": "22.NT.0207", "name": "Nifedipin T20 retard", "nameKana": "ニフェジピン", "activeIngredient": "Nifedipine", "content": "20mg", "usage": "内服", "origin": "ベトナム", "indication": "高血圧症、狭心症"}, {"id": 37, "group": "循環器", "code": "22.NT.0269", "name": "Nitromint 2.6mg", "nameKana": "ニトロミント", "activeIngredient": "Glyceryl trinitrate 2.6mg", "content": "2.6mg", "usage": "内服", "origin": "ハンガリー", "indication": "狭心症発作"}, {"id": 38, "group": "循環器", "code": "22.NT.0622", "name": "Panangin", "nameKana": "パナンギン", "activeIngredient": "Magie, Kali", "content": "11,8 mg/ 36,2mg", "usage": "内服", "origin": "ハンガリー", "indication": "マグネシウム・カリウム欠乏（疲労・筋けいれん）"}, {"id": 39, "group": "循環器", "code": "22.NT.0179", "name": "Plavix", "nameKana": "プラビックス", "activeIngredient": "Clopidogrel bisulfit", "content": "75 mg", "usage": "内服", "origin": "フランス", "indication": "血栓予防（抗血小板薬、脳梗塞・心筋梗塞の再発予防）"}, {"id": 40, "group": "循環器", "code": "22.NT.0185", "name": "Pradaxa 110 mg", "nameKana": "プラザキサ", "activeIngredient": "Dabigatran etexilate", "content": "110 mg", "usage": "内服", "origin": "ドイツ", "indication": "抗凝固（心房細動における脳卒中予防、静脈血栓塞栓症の治療）"}, {"id": 41, "group": "循環器", "code": "22.NT.0272", "name": "Procoralan 5mg", "nameKana": "プロコララン", "activeIngredient": "Ivabradine", "content": "5mg", "usage": "内服", "origin": "フランス", "indication": "狭心症、心不全（心拍数コントロール）"}, {"id": 42, "group": "循環器", "code": "22.NT.0273", "name": "Procoralan 7.5mg", "nameKana": "プロコララン", "activeIngredient": "Ivabradine", "content": "7.5mg", "usage": "内服", "origin": "フランス", "indication": "狭心症、心不全（心拍数コントロール）"}, {"id": 43, "group": "循環器", "code": "DT05455", "name": "Ranexicor 500mg h/30v", "nameKana": "ラネキシコール", "activeIngredient": "Ranolazine", "content": "500mg", "usage": "内服", "origin": "ドイツ", "indication": "慢性安定狭心症"}, {"id": 44, "group": "循環器", "code": "22.NT.0675", "name": "Spiromide", "nameKana": "スピロミド", "activeIngredient": "Spirololactone + Furosemid", "content": "20mg/50mg", "usage": "内服", "origin": "ベトナム", "indication": "浮腫、高血圧症、心不全（利尿薬配合剤）"}, {"id": 45, "group": "循環器", "code": "DT05464", "name": "TANATRIL 5MG", "nameKana": "タナトリル", "activeIngredient": "Imidapril 5mg", "content": "5 MG", "usage": "内服", "origin": "インドネシア", "indication": "高血圧症"}, {"id": 46, "group": "循環器", "code": "22.NT.0533", "name": "Twynsta 40mg/5mg", "nameKana": "ツインスタ", "activeIngredient": "Telmisartan/ Amlodipine besylate", "content": "40mg/5mg", "usage": "内服", "origin": "ドイツ", "indication": "高血圧症（配合剤）"}, {"id": 47, "group": "循環器", "code": "22.NT.0262", "name": "Uperio 100MG", "nameKana": "ウペリオ", "activeIngredient": "Valsartan /Sacubitril", "content": "51,4mg / 48,6mg", "usage": "内服", "origin": "シンガポール", "indication": "慢性心不全"}, {"id": 48, "group": "循環器", "code": "22.NT.0263", "name": "Uperio 200mg", "nameKana": "ウペリオ", "activeIngredient": "Valsartan /Sacubitril", "content": "102,8mg/ 97,2mg", "usage": "内服", "origin": "シンガポール", "indication": "慢性心不全"}, {"id": 49, "group": "循環器", "code": "22.NT.0261", "name": "Uperio 50mg", "nameKana": "ウペリオ", "activeIngredient": "Valsartan /Sacubitril", "content": "25,7mg / 24,3mg", "usage": "内服", "origin": "シンガポール", "indication": "慢性心不全"}, {"id": 50, "group": "循環器", "code": "22.NT.0271", "name": "Vastarel MR", "nameKana": "バスタレルMR", "activeIngredient": "Trimetazidine dihydrochloride", "content": "35mg", "usage": "内服", "origin": "フランス", "indication": "狭心症（心筋代謝改善薬）"}, {"id": 51, "group": "循環器", "code": "22.NT.0241", "name": "Viacoram 3,5mg/2,5 mg (Lọ 30v)", "nameKana": "ビアコラム", "activeIngredient": "Perindopril Arginine/ Amlodipine", "content": "3,5mg / 2,5mg", "usage": "内服", "origin": "アイルランド", "indication": "高血圧症（配合剤）"}, {"id": 52, "group": "循環器", "code": "22.NT.0189", "name": "Xarelto 15mg", "nameKana": "イグザレルト", "activeIngredient": "Rivaroxaban", "content": "15mg", "usage": "内服", "origin": "ドイツ", "indication": "抗凝固（静脈血栓塞栓症・心房細動の脳卒中予防）"}, {"id": 53, "group": "循環器", "code": "22.NT.0190", "name": "Xarelto 20 mg", "nameKana": "イグザレルト", "activeIngredient": "Rivaroxaban", "content": "20mg", "usage": "内服", "origin": "ドイツ", "indication": "抗凝固（静脈血栓塞栓症・心房細動の脳卒中予防）"}, {"id": 54, "group": "循環器", "code": "22.NT.0295", "name": "Diamicron MR 30mg", "nameKana": "ダイアミクロンMR", "activeIngredient": "Gliclazide", "content": "30mg", "usage": "内服", "origin": "フランス", "indication": "2型糖尿病"}, {"id": 55, "group": "循環器", "code": "22.NT.0296", "name": "Diamicron MR 60mg", "nameKana": "ダイアミクロンMR", "activeIngredient": "Gliclazide", "content": "60mg", "usage": "内服", "origin": "フランス", "indication": "2型糖尿病"}, {"id": 56, "group": "循環器", "code": "22.NT.0297", "name": "Forxiga 10mg", "nameKana": "フォシーガ", "activeIngredient": "Dapagliflozin", "content": "10mg", "usage": "内服", "origin": "アメリカ", "indication": "2型糖尿病"}, {"id": 57, "group": "循環器", "code": "22.NT.0298", "name": "Forxiga 5mg", "nameKana": "フォシーガ", "activeIngredient": "Dapagliflozin", "content": "5mg", "usage": "内服", "origin": "アメリカ", "indication": "2型糖尿病"}, {"id": 58, "group": "循環器", "code": "22.NT.0300", "name": "Glucophage 500mg", "nameKana": "グルコファージ", "activeIngredient": "Metformin hydrochloride", "content": "500mg", "usage": "内服", "origin": "フランス", "indication": "2型糖尿病"}, {"id": 59, "group": "循環器", "code": "22.NT.0301", "name": "Glucophage XR 750mg", "nameKana": "グルコファージXR", "activeIngredient": "Metformin hydrochloride", "content": "750mg", "usage": "内服", "origin": "フランス", "indication": "2型糖尿病"}, {"id": 60, "group": "循環器", "code": "22.NT.0302", "name": "Janumet 50/ 1000mg", "nameKana": "ジャヌメット", "activeIngredient": "Sitagliptin, Metformin", "content": "50/ 1000mg", "usage": "内服", "origin": "プエルトリコ", "indication": "2型糖尿病（配合剤）"}, {"id": 61, "group": "循環器", "code": "22.NT.0303", "name": "Janumet 50/ 500mg", "nameKana": "ジャヌメット", "activeIngredient": "Sitagliptin, Metformin", "content": "50/ 500mg", "usage": "内服", "origin": "プエルトリコ", "indication": "2型糖尿病（配合剤）"}, {"id": 62, "group": "循環器", "code": "22.NT.0304", "name": "Janumet 50/ 850mg", "nameKana": "ジャヌメット", "activeIngredient": "Sitagliptin, Metformin", "content": "50/ 850mg", "usage": "内服", "origin": "プエルトリコ", "indication": "2型糖尿病（配合剤）"}, {"id": 63, "group": "循環器", "code": "22.NT.0317", "name": "Jardiance 10mg", "nameKana": "ジャディアンス", "activeIngredient": "Empagliflozin", "content": "10mg", "usage": "内服", "origin": "ドイツ", "indication": "2型糖尿病"}, {"id": 64, "group": "循環器", "code": "22.NT.0318", "name": "Jardiance 25mg", "nameKana": "ジャディアンス", "activeIngredient": "Empagliflozin", "content": "25mg", "usage": "内服", "origin": "ドイツ", "indication": "2型糖尿病"}, {"id": 65, "group": "循環器", "code": "22.NT.0321", "name": "Jardiance Duo 12,5/ 1000mg", "nameKana": "ジャディアンスデュオ", "activeIngredient": "Empagliflozin, Metformin", "content": "12,5/ 1000mg", "usage": "内服", "origin": "ドイツ", "indication": "2型糖尿病（配合剤）"}, {"id": 66, "group": "循環器", "code": "22.NT.0320", "name": "Jardiance Duo 12,5/ 850mg", "nameKana": "ジャディアンスデュオ", "activeIngredient": "Empagliflozin, Metformin", "content": "12,5/ 850mg", "usage": "内服", "origin": "ドイツ", "indication": "2型糖尿病（配合剤）"}, {"id": 67, "group": "循環器", "code": "22.NT.0308", "name": "Lantus SoloStar", "nameKana": "ランタスソロスター", "activeIngredient": "Insulin glargine 100 Units/ml", "content": "100 U/ml x 3ml", "usage": "皮下注射", "origin": "ドイツ", "indication": "糖尿病（インスリン製剤）"}, {"id": 68, "group": "循環器", "code": "22.NT.0312", "name": "Trajenta 5mg (H/30v)", "nameKana": "トラゼンタ", "activeIngredient": "Linagliptin", "content": "5mg", "usage": "内服", "origin": "ドイツ", "indication": "2型糖尿病"}, {"id": 69, "group": "循環器", "code": "22.NT.0557", "name": "Xigduo 10/1000 mg", "nameKana": "シグデュオ", "activeIngredient": "Dapagliflozin, Metformin 10/1000", "content": "10mg/1000mg", "usage": "内服", "origin": "アメリカ", "indication": "2型糖尿病（配合剤）"}, {"id": 70, "group": "循環器", "code": "22.NT.0556", "name": "Xigduo 10/500 mg", "nameKana": "シグデュオ", "activeIngredient": "Dapagliflozin, Metformin 10/500", "content": "10mg/500mg", "usage": "内服", "origin": "アメリカ", "indication": "2型糖尿病（配合剤）"}, {"id": 71, "group": "循環器", "code": "DT5492", "name": "AURITZ-EZ 10/10mg (Rosuvastatin 10mg + Ezetimibe 10mg)", "nameKana": "オーリッツイーゼット", "activeIngredient": "Rosuvastatin + Ezetimibe", "content": "10mg/ 10mg", "usage": "内服", "origin": "タイ", "indication": "脂質異常症（配合剤）"}, {"id": 72, "group": "循環器", "code": "DT5494", "name": "AURITZ-EZ 20/10mg (Rosuvastatin 20mg + Ezetimibe 10mg)", "nameKana": "オーリッツイーゼット", "activeIngredient": "Rosuvastatin + Ezetimibe", "content": "20mg/10mg", "usage": "内服", "origin": "タイ", "indication": "脂質異常症（配合剤）"}, {"id": 73, "group": "循環器", "code": "22.NT.0284", "name": "Crestor 10mg", "nameKana": "クレストール", "activeIngredient": "Rosuvastatin", "content": "10mg", "usage": "内服", "origin": "アメリカ", "indication": "脂質異常症（高コレステロール血症）"}, {"id": 74, "group": "循環器", "code": "22.NT.0283", "name": "Crestor 20mg", "nameKana": "クレストール", "activeIngredient": "Rosuvastatin", "content": "20mg", "usage": "内服", "origin": "アメリカ", "indication": "脂質異常症（高コレステロール血症）"}, {"id": 75, "group": "循環器", "code": "22.NT.0285", "name": "Crestor 5mg", "nameKana": "クレストール", "activeIngredient": "Rosuvastatin", "content": "5mg", "usage": "内服", "origin": "アメリカ", "indication": "脂質異常症（高コレステロール血症）"}, {"id": 76, "group": "循環器", "code": "22.NT.0287", "name": "Lipanthyl NT 145mg", "nameKana": "リパンチルNT", "activeIngredient": "Fenofibrate", "content": "145mg", "usage": "内服", "origin": "アイルランド", "indication": "脂質異常症（高トリグリセリド血症）"}, {"id": 77, "group": "循環器", "code": "22.NT.0290", "name": "Lipitor 10mg", "nameKana": "リピトール", "activeIngredient": "Atorvastatin", "content": "10mg", "usage": "内服", "origin": "アメリカ", "indication": "脂質異常症（高コレステロール血症）"}, {"id": 78, "group": "循環器", "code": "DT05408", "name": "Lypsta Plus 20/10 mg", "nameKana": "リプスタプラス", "activeIngredient": "Rosuvastatin20mg +Ezetimibe10mg", "content": "20mg/10mg", "usage": "内服", "origin": "インド", "indication": "脂質異常症（配合剤）"}, {"id": 79, "group": "消化器", "code": "DT05414", "name": "Azintal Forte Tab (H10 vỉ*10v)", "nameKana": "アジンタールフォルテ", "activeIngredient": "Cellulase, Simethicon, Azintamid, Pancreatin", "content": "", "usage": "内服", "origin": "韓国", "indication": "消化不良・腹部膨満（消化酵素配合薬）"}, {"id": 80, "group": "消化器", "code": "22.NT.0092", "name": "Buscopan 10 mg (viên)", "nameKana": "ブスコパン", "activeIngredient": "Hyoscine butylbromide 10 mg", "content": "", "usage": "内服", "origin": "インドネシア", "indication": "消化管・尿路の痙攣性疼痛（鎮痙薬）"}, {"id": 81, "group": "消化器", "code": "22.NT.0007", "name": "Debridat", "nameKana": "デブリダット", "activeIngredient": "Trimebutine maleate", "content": "100mg", "usage": "内服", "origin": "フランス", "indication": "過敏性腸症候群、消化管運動異常"}, {"id": 82, "group": "消化器", "code": "22.NT.0495", "name": "Elthon", "nameKana": "エルソン", "activeIngredient": "Itoprid", "content": "50mg", "usage": "内服", "origin": "日本", "indication": "機能性ディスペプシア（消化管運動改善薬）"}, {"id": 83, "group": "消化器", "code": "22.NT.0012", "name": "Forlax Pwd", "nameKana": "フォルラックス", "activeIngredient": "Macrogol 4000", "content": "10g", "usage": "内服", "origin": "フランス", "indication": "便秘症"}, {"id": 84, "group": "消化器", "code": "22.NT.0073", "name": "Fugacar", "nameKana": "フガカール", "activeIngredient": "Mebendazol", "content": "500mg", "usage": "内服", "origin": "タイ", "indication": "腸管寄生虫症（駆虫薬）"}, {"id": 85, "group": "消化器", "code": "DT05376", "name": "Gaviscon Suspension", "nameKana": "ガビスコン", "activeIngredient": "Alginate 500mg\nNatri bicarbonate 267mg\nCalci carbonat 160mg", "content": null, "usage": "内服", "origin": "イギリス", "indication": "胃食道逆流症・胸やけ（制酸配合剤）"}, {"id": 86, "group": "消化器", "code": "22.NT0722", "name": "Imodium", "nameKana": "イモジウム", "activeIngredient": "Loperamid", "content": "2mg", "usage": "内服", "origin": "ポルトガル", "indication": "下痢症"}, {"id": 87, "group": "消化器", "code": "22.NT.0492", "name": "Motilium-M", "nameKana": "モティリウムM", "activeIngredient": "Domperidon maleat", "content": "10mg", "usage": "内服", "origin": "タイ", "indication": "悪心・嘔吐、消化不良（消化管運動改善薬）"}, {"id": 88, "group": "消化器", "code": "22.NT.0485", "name": "Nexium mups 40mg", "nameKana": "ネキシウム", "activeIngredient": "Esomeprazole", "content": "40mg", "usage": "内服", "origin": "スウェーデン", "indication": "胃潰瘍・逆流性食道炎（プロトンポンプ阻害薬）"}, {"id": 89, "group": "消化器", "code": "DT05445", "name": "NOSPA FORTE 80MG", "nameKana": "ノスパフォルテ", "activeIngredient": "Drotaverine", "content": "80mg", "usage": "内服", "origin": "ハンガリー", "indication": "消化管の痙攣性疼痛（鎮痙薬）"}, {"id": 90, "group": "消化器", "code": "22.NT.0498", "name": "Pariet 20mg", "nameKana": "パリエット", "activeIngredient": "Rabeprazole Sodium", "content": "20mg", "usage": "内服", "origin": "日本", "indication": "胃潰瘍・逆流性食道炎（プロトンポンプ阻害薬）"}, {"id": 91, "group": "消化器", "code": "DT05471", "name": "Redgamax (Nghệ NANO)", "nameKana": "レッドガマックス", "activeIngredient": "Curcuminoid 250mg", "content": "", "usage": "内服", "origin": "ベトナム", "indication": "胃腸機能サポート（ウコン由来抗炎症サプリメント）"}, {"id": 92, "group": "消化器", "code": "DT5496", "name": "Shinesome (Esomeprazole 40mg)", "nameKana": "シャインソーム", "activeIngredient": "Esomeprazole", "content": "40mg", "usage": "内服", "origin": "韓国", "indication": "胃潰瘍・逆流性食道炎（プロトンポンプ阻害薬）"}, {"id": 93, "group": "消化器", "code": "22.NT.0005", "name": "Smecta", "nameKana": "スメクタ", "activeIngredient": "Diosmectite", "content": "3g", "usage": "内服", "origin": "フランス", "indication": "下痢症"}, {"id": 94, "group": "消化器", "code": "DT05476", "name": "Somastop (sucralfate 1g)", "nameKana": "ソマストップ", "activeIngredient": "sucralfate 1g", "content": "1g", "usage": "内服", "origin": "ベトナム", "indication": "胃・十二指腸潰瘍"}, {"id": 95, "group": "消化器", "code": "22.NT.0519", "name": "Trymo 120mg (Bismuth)", "nameKana": "トライモ", "activeIngredient": "Bismuth Subcitrate", "content": "120 mg", "usage": "内服", "origin": "インド", "indication": "胃潰瘍・十二指腸潰瘍（H.pylori除菌補助）"}, {"id": 96, "group": "消化器", "code": "DT05402", "name": "Yumangel F 1,5G/15ML", "nameKana": "ユマンゲルF", "activeIngredient": "Almagat", "content": "1.5g", "usage": "内服", "origin": "韓国", "indication": "胃炎、胃・十二指腸潰瘍（制酸薬）"}, {"id": 97, "group": "抗生剤・抗ウイルス剤", "code": "DT05390", "name": "Ortizole (Ornidazole 500mg)", "nameKana": "オルチゾール", "activeIngredient": "Ornidazole 500mg", "content": "500mg", "usage": "内服", "origin": "ベトナム", "indication": "嫌気性菌・原虫感染症（トリコモナス症等）"}, {"id": 98, "group": "抗生剤・抗ウイルス剤", "code": "22.NT.0413", "name": "Acyclovir Cream", "nameKana": "アシクロビル", "activeIngredient": "Acyclovir", "content": "250mg/5g", "usage": "外用", "origin": "ベトナム", "indication": "単純ヘルペス・帯状疱疹などヘルペスウイルス感染症"}, {"id": 99, "group": "抗生剤・抗ウイルス剤", "code": "22.NT.0443", "name": "Acyclovir Stella 800mg", "nameKana": "アシクロビルステラ", "activeIngredient": "Acyclovir", "content": "800mg", "usage": "内服", "origin": "ベトナム", "indication": "単純ヘルペス・帯状疱疹などヘルペスウイルス感染症"}, {"id": 100, "group": "抗生剤・抗ウイルス剤", "code": "DT05428", "name": "Amoxicillin 1000 mg (Fabamox DT )", "nameKana": "アモキシシリン ファバモックス", "activeIngredient": "Amoxicillin", "content": "1000 mg", "usage": "内服", "origin": "ベトナム", "indication": "細菌感染症（ペニシリン系抗生物質）"}, {"id": 101, "group": "抗生剤・抗ウイルス剤", "code": "22.NT.0332", "name": "Augmentin 1g", "nameKana": "オーグメンチン", "activeIngredient": "Amoxicillin, Clavulanate", "content": "(875mg/ 125mg)", "usage": "内服", "origin": "イギリス", "indication": "細菌感染症（β-ラクタマーゼ産生菌を含む、ペニシリン系配合抗生物質）"}, {"id": 102, "group": "抗生剤・抗ウイルス剤", "code": "22.NT.0335", "name": "Augmentin Sac 500mg/ 62.5mg", "nameKana": "オーグメンチン", "activeIngredient": "Amoxicillin, Clavulanate", "content": "500 mg/ 62.5mg", "usage": "内服", "origin": "イギリス", "indication": "細菌感染症（β-ラクタマーゼ産生菌を含む、ペニシリン系配合抗生物質）"}, {"id": 103, "group": "抗生剤・抗ウイルス剤", "code": "DT05412", "name": "Bilclamos Bid 1000 mg", "nameKana": "ビルクラモス", "activeIngredient": "Amoxicillin 875mg + Clavulanic acid 125mg", "content": "", "usage": "内服", "origin": "トルコ", "indication": "細菌感染症（β-ラクタマーゼ産生菌を含む、ペニシリン系配合抗生物質）"}, {"id": 104, "group": "抗生剤・抗ウイルス剤", "code": "DT05403", "name": "Biseptol 480mg", "nameKana": "ビセプトール", "activeIngredient": "Sulfamethoxazole                             Trimethoprim", "content": "400mg/80mg", "usage": "内服", "origin": "ポーランド", "indication": "細菌感染症（サルファ剤配合抗菌薬）"}, {"id": 105, "group": "抗生剤・抗ウイルス剤", "code": "22.NT.0361", "name": "Ciprobay 500mg", "nameKana": "シプロバイ", "activeIngredient": "Ciprofloxacin 500mg", "content": "500mg", "usage": "内服", "origin": "ドイツ", "indication": "細菌感染症（ニューキノロン系抗生物質）"}, {"id": 106, "group": "抗生剤・抗ウイルス剤", "code": "22.NT.0653", "name": "Doxycyclin", "nameKana": "ドキシサイクリン", "activeIngredient": "Doxycyclin", "content": "100mg", "usage": "内服", "origin": "ベトナム", "indication": "細菌感染症（テトラサイクリン系抗生物質）"}, {"id": 107, "group": "抗生剤・抗ウイルス剤", "code": "22.NT.0597", "name": "Flustad", "nameKana": "フルスタッド", "activeIngredient": "Oseltamivir Phosphate", "content": "75mg", "usage": "内服", "origin": "ベトナム", "indication": "インフルエンザ"}, {"id": 108, "group": "抗生剤・抗ウイルス剤", "code": "22.NT.0355", "name": "Klacid Forte", "nameKana": "クラシッドフォルテ", "activeIngredient": "Clarithromycin", "content": "500mg", "usage": "内服", "origin": "イタリア", "indication": "細菌感染症（マクロライド系抗生物質）"}, {"id": 109, "group": "抗生剤・抗ウイルス剤", "code": "22.NT.0535..", "name": "Klacid MR", "nameKana": "クラシッドMR", "activeIngredient": "Clarithromycin", "content": "500mg", "usage": "内服", "origin": "イタリア", "indication": "細菌感染症（マクロライド系抗生物質）"}, {"id": 110, "group": "抗生剤・抗ウイルス剤", "code": "DT05410", "name": "Letdion 0.5% 5ml", "nameKana": "レトジオン", "activeIngredient": "Levofloxacin: 0.5%", "content": "0.5%/5ml", "usage": "点眼", "origin": "ベトナム", "indication": "細菌性結膜炎などの眼感染症（点眼）"}, {"id": 111, "group": "抗生剤・抗ウイルス剤", "code": "DT05374", "name": "Metronidazol 250mg", "nameKana": "メトロニダゾール", "activeIngredient": "Metronidazol", "content": "250mg", "usage": "内服", "origin": "ベトナム", "indication": "嫌気性菌・原虫感染症（トリコモナス症等）"}, {"id": 112, "group": "抗生剤・抗ウイルス剤", "code": "DT05439", "name": "Nirdicin 500mg", "nameKana": "ニルジシン", "activeIngredient": "Levofloxacin 500mg", "content": "500mg", "usage": "内服", "origin": "ギリシャ", "indication": "細菌感染症（ニューキノロン系抗生物質）"}, {"id": 113, "group": "抗生剤・抗ウイルス剤", "code": "22.NT.0368", "name": "Oflovid 0.3% 5ml", "nameKana": "オフロビッド", "activeIngredient": "Ofloxacin 0.3% 5ml", "content": "", "usage": "点眼", "origin": "日本", "indication": "細菌性結膜炎などの眼感染症（点眼）"}, {"id": 114, "group": "抗生剤・抗ウイルス剤", "code": "22.NT.0692.", "name": "Oflovid mỡ", "nameKana": "オフロビッド", "activeIngredient": "Ofloxacin", "content": "0,3%", "usage": "外用", "origin": "", "indication": "細菌感染症（ニューキノロン系抗生物質）"}, {"id": 115, "group": "抗生剤・抗ウイルス剤", "code": "DT5495", "name": "TAFSAFE ( Tenofovir Alafenamide 25mg)", "nameKana": "タフセーフ", "activeIngredient": "Tenofovir Alafenamide 25mg", "content": "25mg", "usage": "内服", "origin": "インド", "indication": "B型肝炎（抗ウイルス薬）"}, {"id": 116, "group": "抗生剤・抗ウイルス剤", "code": "22.NT.0447", "name": "Tamiflu", "nameKana": "タミフル", "activeIngredient": "Oseltamivir Phosphate", "content": "75mg", "usage": "内服", "origin": "スイス", "indication": "インフルエンザ"}, {"id": 117, "group": "抗生剤・抗ウイルス剤", "code": "22.NT.0360", "name": "Tavanic", "nameKana": "タバニック", "activeIngredient": "Levofloxacin hemihydrate", "content": "500mg", "usage": "内服", "origin": "フランス", "indication": "細菌感染症（ニューキノロン系抗生物質）"}, {"id": 118, "group": "抗生剤・抗ウイルス剤", "code": "22.NT.0370", "name": "Tetracyclin (Mekophar)", "nameKana": "テトラサイクリン", "activeIngredient": "Tetracyclin", "content": "500mg", "usage": "内服", "origin": "ベトナム", "indication": "細菌感染症（テトラサイクリン系抗生物質）"}, {"id": 119, "group": "抗生剤・抗ウイルス剤", "code": "22.NT.0518", "name": "Tinidazol 500mg", "nameKana": "チニダゾール", "activeIngredient": "Tinidazol", "content": "500mg", "usage": "内服", "origin": "ベトナム", "indication": "嫌気性菌・原虫感染症（トリコモナス症等）"}, {"id": 120, "group": "抗生剤・抗ウイルス剤", "code": "DT05411", "name": "Zebacef (Cefdinir) 300mg", "nameKana": "ゼバセフ", "activeIngredient": "Cefdinir 300mg", "content": "300mg", "usage": "内服", "origin": "トルコ", "indication": "細菌感染症（セフェム系抗生物質）"}, {"id": 121, "group": "抗生剤・抗ウイルス剤", "code": "22.NT.0341", "name": "Zinnat 500mg", "nameKana": "ジンナート", "activeIngredient": "Cefuroxime axetil", "content": "500mg", "usage": "内服", "origin": "イギリス", "indication": "細菌感染症（セフェム系抗生物質）"}, {"id": 122, "group": "抗生剤・抗ウイルス剤", "code": "22.NT.0349", "name": "Zitromax", "nameKana": "ジスロマック", "activeIngredient": "Azithromycin", "content": "500mg", "usage": "内服", "origin": "イタリア", "indication": "細菌感染症（マクロライド系抗生物質）"}, {"id": 123, "group": "呼吸器・アレルギー", "code": "0106670445", "name": "ABROCTO 10ml (Ambroxol 30mg)", "nameKana": "アブロクト", "activeIngredient": "Ambroxol hydrochlorid 30mg", "content": "30mg", "usage": "内服", "origin": "ベトナム", "indication": "去痰（粘性の痰の排出困難）"}, {"id": 124, "group": "呼吸器・アレルギー", "code": "22.NT.0118", "name": "Acemuc viên (tablet) 200mg", "nameKana": "アセミュック", "activeIngredient": "Acetylcysteine", "content": "200mg", "usage": "内服", "origin": "ベトナム", "indication": "去痰（粘性の痰の排出困難）"}, {"id": 125, "group": "呼吸器・アレルギー", "code": "DT05472", "name": "Aerius 0.5mg/ml syrup 60ml", "nameKana": "エリアス", "activeIngredient": "Desloratadin 0.5mg/ml", "content": "0.5mg/ml", "usage": "内服", "origin": "ベルギー", "indication": "アレルギー性鼻炎、蕁麻疹"}, {"id": 126, "group": "呼吸器・アレルギー", "code": "22.NT.0042", "name": "Aerius 5mg", "nameKana": "エリアス", "activeIngredient": "Desloratadine 5mg", "content": "5mg", "usage": "内服", "origin": "ベルギー", "indication": "アレルギー性鼻炎、蕁麻疹"}, {"id": 127, "group": "呼吸器・アレルギー", "code": "22.NT.0122", "name": "AMBROXOL 30mg ( Viên nang)", "nameKana": "アンブロキソール", "activeIngredient": "Ambroxol hydrochlorid", "content": "30 mg", "usage": "内服", "origin": "ベトナム", "indication": "去痰（粘性の痰の排出困難）"}, {"id": 128, "group": "呼吸器・アレルギー", "code": "22.NT.0423", "name": "Atussin", "nameKana": "アツシン", "activeIngredient": "Dextromethorphan Hydrobromide Hydrate", "content": "10mg/ 1mg/ 133mg/ 50mg", "usage": "内服", "origin": "ベトナム", "indication": "鎮咳（乾性咳嗽）"}, {"id": 129, "group": "呼吸器・アレルギー", "code": "22.NT.0419", "name": "Avamys 60 liều Fluticasone", "nameKana": "アバミス", "activeIngredient": "Fluticason furoat", "content": "27.5mcg/liều xịt", "usage": "点鼻", "origin": "イギリス", "indication": "アレルギー性鼻炎（点鼻ステロイド）"}, {"id": 130, "group": "呼吸器・アレルギー", "code": "22.NT.0465", "name": "Bilaxten 20mg", "nameKana": "ビラクステン", "activeIngredient": "Bilastine", "content": "20mg", "usage": "内服", "origin": "イタリア", "indication": "アレルギー性鼻炎、蕁麻疹"}, {"id": 131, "group": "呼吸器・アレルギー", "code": "22.NT.0061", "name": "Dorithricin", "nameKana": "ドリスリシン", "activeIngredient": "Tyrothricin", "content": "0,5mg/ 1,00mg/ 1,5mg", "usage": "内服", "origin": "ドイツ", "indication": "口腔咽頭感染症（トローチ）"}, {"id": 132, "group": "呼吸器・アレルギー", "code": "22.NT.0121", "name": "Halixol", "nameKana": "ハリキソール", "activeIngredient": "Ambroxol Hydrochloride", "content": "15mg/ 5ml - 100ml", "usage": "内服", "origin": "ハンガリー", "indication": "去痰（粘性の痰の排出困難）"}, {"id": 133, "group": "呼吸器・アレルギー", "code": "DT05384", "name": "Lambertu 60mg", "nameKana": "ランベルツ", "activeIngredient": "Pyridostigmin bromid", "content": "60mg", "usage": "内服", "origin": "ベトナム", "indication": "重症筋無力症"}, {"id": 134, "group": "呼吸器・アレルギー", "code": "22.NT.0550", "name": "Medoral", "nameKana": "メドラール", "activeIngredient": "Chlorhexidine", "content": "0,2% - 250ml", "usage": "外用", "origin": "ベトナム", "indication": "皮膚・粘膜の消毒"}, {"id": 135, "group": "呼吸器・アレルギー", "code": "22.NT.0456", "name": "Medrol 16mg", "nameKana": "メドロール", "activeIngredient": "Methylprednisolone", "content": "16mg", "usage": "内服", "origin": "イタリア", "indication": "炎症性疾患（ステロイド）"}, {"id": 136, "group": "呼吸器・アレルギー", "code": "22.NT.0457", "name": "Medrol 4mg", "nameKana": "メドロール", "activeIngredient": "Methylprednisolone", "content": "4mg", "usage": "内服", "origin": "イタリア", "indication": "炎症性疾患（ステロイド）"}, {"id": 137, "group": "呼吸器・アレルギー", "code": "DT05399", "name": "Meseca Advanced 120 liều", "nameKana": "メセカアドバンス", "activeIngredient": "Fluticasone furonate", "content": "", "usage": "点鼻", "origin": "ベトナム", "indication": "アレルギー性鼻炎（点鼻ステロイド）"}, {"id": 138, "group": "呼吸器・アレルギー", "code": "22.NT.0066", "name": "Nasonex", "nameKana": "ナゾネックス", "activeIngredient": "Mometasone furoate", "content": "50mcg/liều - 60 liều", "usage": "点鼻", "origin": "ベルギー", "indication": "アレルギー性鼻炎（点鼻ステロイド）"}, {"id": 139, "group": "呼吸器・アレルギー", "code": "22.NT.0064", "name": "Otrivin xịt mũi 0,1% - 10ml", "nameKana": "オトリビン", "activeIngredient": "Xylometazoline HCL", "content": "", "usage": "点鼻", "origin": "スイス", "indication": "鼻閉（点鼻血管収縮薬）"}, {"id": 140, "group": "呼吸器・アレルギー", "code": "22.NT.529", "name": "Prospan 100ml", "nameKana": "プロスパン", "activeIngredient": "Lá thường xuân", "content": "", "usage": "内服", "origin": "ドイツ", "indication": "静脈還流不全（下肢のむくみ、生薬サプリメント）"}, {"id": 141, "group": "呼吸器・アレルギー", "code": "22.NT.0458", "name": "Pulmicort Respules", "nameKana": "パルミコートレスピュール", "activeIngredient": "Budesonid", "content": "0,5mg/2ml", "usage": "ネブライザー", "origin": "イギリス", "indication": "気管支喘息（吸入ステロイド）"}, {"id": 142, "group": "呼吸器・アレルギー", "code": "DT05481", "name": "Salbutamol 4mg Salzol", "nameKana": "サルブタモールサルゾール", "activeIngredient": "Salbutamol 4mg", "content": "4mg", "usage": "内服", "origin": "ベトナム", "indication": "気管支喘息、COPD（気管支拡張薬）"}, {"id": 143, "group": "呼吸器・アレルギー", "code": "DT05430", "name": "Symbicort 120 liều", "nameKana": "シムビコート", "activeIngredient": "Budesonid/ formoterol", "content": "160mcg/4.5mcg", "usage": "点鼻", "origin": "スウェーデン", "indication": "気管支喘息、COPD（吸入ステロイド配合気管支拡張薬）"}, {"id": 144, "group": "呼吸器・アレルギー", "code": "22.NT.0530", "name": "Telfast HD 180mg", "nameKana": "テルファスト", "activeIngredient": "Fexofenadin HCl 180mg", "content": "180mg", "usage": "内服", "origin": "ベトナム", "indication": "アレルギー性鼻炎、蕁麻疹"}, {"id": 145, "group": "呼吸器・アレルギー", "code": "22.NT.0613", "name": "Terpin Zoat 100mg/5mg", "nameKana": "テルピンゾアット", "activeIngredient": "Terpin hydrate, Natri benzoat", "content": "100mg/50mg", "usage": "内服", "origin": "ベトナム", "indication": "鎮咳去痰"}, {"id": 146, "group": "呼吸器・アレルギー", "code": "24.NT.0779", "name": "Valgesic (Hydrocortison 10mg)", "nameKana": "バルジェシック", "activeIngredient": "Hydrocortison", "content": "10mg", "usage": "内服", "origin": "ベトナム", "indication": "皮膚炎・湿疹（ステロイド外用薬）"}, {"id": 147, "group": "整形", "code": "22.NT.0449", "name": "Arcoxia 60mg", "nameKana": "アルコキシア", "activeIngredient": "Etoricoxib", "content": "60mg", "usage": "Uống", "origin": "アメリカ", "indication": "関節リウマチ、変形性関節症、痛風（COX-2選択的NSAIDs）"}, {"id": 148, "group": "整形", "code": "22.NT.0726", "name": "Arcoxia 90mg", "nameKana": "アルコキシア", "activeIngredient": "Etoricoxib", "content": "90mg", "usage": "Uống", "origin": "アメリカ", "indication": "関節リウマチ、変形性関節症、痛風（COX-2選択的NSAIDs）"}, {"id": 149, "group": "整形", "code": "22.NT.0385", "name": "Artrodar", "nameKana": "アルトロダー", "activeIngredient": "Diacerein", "content": "50mg", "usage": "Uống", "origin": "アルゼンチン", "indication": "変形性関節症"}, {"id": 150, "group": "整形", "code": "22.NT.0451", "name": "Celebrex", "nameKana": "セレブレックス", "activeIngredient": "Celecoxib", "content": "200mg", "usage": "Uống", "origin": "アメリカ", "indication": "関節リウマチ、変形性関節症などの疼痛・炎症（COX-2選択的NSAIDs）"}, {"id": 151, "group": "整形", "code": "22.NT.0380", "name": "Colchicine 1mg", "nameKana": "コルヒチン", "activeIngredient": "Colchicin", "content": "1mg", "usage": "Uống", "origin": "ベトナム", "indication": "痛風発作"}, {"id": 152, "group": "整形", "code": "22.NT.0381", "name": "Feburic", "nameKana": "フェブリク", "activeIngredient": "Febuxostat 80mg", "content": "80mg", "usage": "Uống", "origin": "フランス", "indication": "高尿酸血症・痛風"}, {"id": 153, "group": "整形", "code": "22.NT.0382", "name": "Febuxostat 40MG (Forgout)", "nameKana": "フェブキソスタットフォーガウト", "activeIngredient": "Febuxostat", "content": "40mg", "usage": "Uống", "origin": "ベトナム", "indication": "高尿酸血症・痛風"}, {"id": 154, "group": "整形", "code": "22.NT.0384", "name": "Fosamax Plus 70mg/ 2800IU", "nameKana": "フォサマックスプラス", "activeIngredient": "Vitamin D3, Alendronic Acid", "content": "", "usage": "Uống", "origin": "スペイン", "indication": "骨粗鬆症"}, {"id": 155, "group": "整形", "code": "22.NT.0452", "name": "Mobic 7,5mg", "nameKana": "モービック", "activeIngredient": "Meloxicam", "content": "7,5mg", "usage": "Uống", "origin": "ギリシャ", "indication": "関節リウマチ、変形性関節症（NSAIDs）"}, {"id": 156, "group": "整形", "code": "22.NT.0383", "name": "Myonal", "nameKana": "ミオナール", "activeIngredient": "Eperison hydroclorid", "content": "50mg", "usage": "Uống", "origin": "日本", "indication": "筋緊張改善（中枢性筋弛緩薬）"}, {"id": 157, "group": "整形", "code": "22.NT.0113", "name": "Piascledine", "nameKana": "ピアスクレディン", "activeIngredient": "Cao toàn phần không xà phòng hóa dầu quả bơ và dầu đậu nành", "content": "300mg", "usage": "Uống", "origin": "フランス", "indication": "変形性関節症（軟骨保護サプリメント、アボカド・大豆不けん化物）"}, {"id": 158, "group": "整形", "code": "22.NT.0089", "name": "Viartril-S (Glucosamin1500mg)", "nameKana": "ビアートリルS", "activeIngredient": "Glucosamine", "content": "1500mg", "usage": "Uống", "origin": "アイルランド", "indication": "変形性関節症（関節軟骨保護サプリメント）"}, {"id": 159, "group": "整形", "code": "22.NT.0111", "name": "Voltaren Emulgel", "nameKana": "ボルタレンエムルゲル", "activeIngredient": "Diclofenac Sodium", "content": "1.16mg", "usage": "Bôi", "origin": "スイス", "indication": "疼痛・炎症（NSAIDs）"}, {"id": 160, "group": "産婦人科", "code": "22.NT.0128", "name": "Betadine phụ khoa", "nameKana": "ベタジン", "activeIngredient": "Povidon Iod", "content": null, "usage": "Dùng ngoài", "origin": "キプロス", "indication": "皮膚・粘膜の消毒"}, {"id": 161, "group": "産婦人科", "code": "22.NT.0588", "name": "Canesten  6-Days Vaginal tablets 100mg", "nameKana": "カネステン", "activeIngredient": "Clotrimazol", "content": "100mg", "usage": "Đặt âm đạo", "origin": "インド", "indication": "皮膚・腟の真菌感染症"}, {"id": 162, "group": "産婦人科", "code": "22.NT.0523..", "name": "Canvey", "nameKana": "カンベイ", "activeIngredient": "Metronidazole, Chloramphenicol, Nystatin, Dexamethasone", "content": "", "usage": "Đặt âm đạo", "origin": "モルドバ", "indication": "腟炎（細菌性・真菌性混合感染、腟錠配合剤）"}, {"id": 163, "group": "産婦人科", "code": "DT05365", "name": "Chimitol Vaginal Tablet ( H/2v)", "nameKana": "キミトール", "activeIngredient": "Clotrimazole 500mg", "content": "500mg", "usage": "Đặt âm đạo", "origin": "韓国", "indication": "腟カンジダ症"}, {"id": 164, "group": "産婦人科", "code": "DT05397", "name": "Fentimeyer 600 (H/3v)", "nameKana": "フェンティマイヤー", "activeIngredient": "Fenticonazol nitrat 200mg", "content": "", "usage": "Đặt âm đạo", "origin": "ベトナム", "indication": "腟カンジダ症"}, {"id": 165, "group": "産婦人科", "code": "DT05485", "name": "Fluomizin 10mg", "nameKana": "フルオミジン", "activeIngredient": "Dequalinium chloride", "content": "10mg", "usage": "Đặt âm đạo", "origin": "ドイツ", "indication": "腟炎（殺菌消毒腟錠）"}, {"id": 166, "group": "産婦人科", "code": "DT05420", "name": "GENTUSI ( 2 vỉ x 5 viên)", "nameKana": "ジェンツシ", "activeIngredient": "", "content": "", "usage": "Đặt âm đạo", "origin": "モルドバ", "indication": ""}, {"id": 167, "group": "産婦人科", "code": "22.NT.0651", "name": "Gynoflor", "nameKana": "ジノフロール", "activeIngredient": "Lactobacillus acidophilus/Estriol", "content": "100.000.000 - 10^10cfu/ 0.03mg", "usage": "Đặt âm đạo", "origin": "ドイツ", "indication": "腟内フローラ改善（萎縮性腟炎）"}, {"id": 168, "group": "産婦人科", "code": "DT05398", "name": "Meclon( H/10 viên)", "nameKana": "メクロン", "activeIngredient": "Clotrimazole, Metronidazole", "content": "100mg /500mg", "usage": "Đặt âm đạo", "origin": "イタリア", "indication": "腟炎（真菌・原虫混合感染）"}, {"id": 169, "group": "産婦人科", "code": "22.NT.0658", "name": "Nabifar", "nameKana": "ナビファー", "activeIngredient": "Natri bicarbonat", "content": "5g", "usage": "Dùng ngoài", "origin": "ベトナム", "indication": "代謝性アシドーシスの補正（重曹製剤）"}, {"id": 170, "group": "肝臓・腎臓・泌尿器", "code": "22.NT.0666", "name": "Avodart", "nameKana": "アボダート", "activeIngredient": "Dutasterid", "content": "0,5mg", "usage": "内服", "origin": "ポーランド", "indication": "前立腺肥大症"}, {"id": 171, "group": "肝臓・腎臓・泌尿器", "code": "22.NT.0076", "name": "Boganic- nang mềm", "nameKana": "ボガニック", "activeIngredient": "Cao actiso, cao rau đắng đất, cao bìm bìm biếc", "content": "", "usage": "内服", "origin": "ベトナム", "indication": "肝機能・消化機能サポート（生薬系肝臓サプリメント）"}, {"id": 172, "group": "肝臓・腎臓・泌尿器", "code": "DT05479", "name": "Harnal ocas 0.4mg", "nameKana": "ハルナールD", "activeIngredient": "Tamsulosin hydrochloride 0.4mg", "content": "Tamsulosin hydrochloride 0.4mg", "usage": "内服", "origin": "オランダ", "indication": "前立腺肥大症に伴う排尿障害"}, {"id": 173, "group": "肝臓・腎臓・泌尿器", "code": "22.NT.0685", "name": "Ketosteril", "nameKana": "ケトステリル", "activeIngredient": "", "content": "", "usage": "内服", "origin": "ポルトガル", "indication": ""}, {"id": 174, "group": "肝臓・腎臓・泌尿器", "code": "DT05382", "name": "Miclacol Blue -F", "nameKana": "ミクラコールブルー", "activeIngredient": "Methylene Blue, Bromo camphor", "content": "", "usage": "内服", "origin": "ベトナム", "indication": "皮膚の消毒・鎮痒（外用消毒薬）"}, {"id": 175, "group": "肝臓・腎臓・泌尿器", "code": "DT05449", "name": "Rowachol vỉ/ 10v", "nameKana": "ロワコール", "activeIngredient": "cineol, Menthol, Borneol, Olive oil, Pinene, Camphene, Menthone", "content": "", "usage": "内服", "origin": "アイルランド", "indication": "去痰・鎮咳（精油系去痰薬）"}, {"id": 176, "group": "肝臓・腎臓・泌尿器", "code": "ROWT", "name": "Rowatinex", "nameKana": "ロワチネックス", "activeIngredient": "Borneol, Pinene, Camphene", "content": "10/31/15mg", "usage": "内服", "origin": "アイルランド", "indication": "去痰・鎮咳（精油系去痰薬）"}, {"id": 177, "group": "肝臓・腎臓・泌尿器", "code": "22.NT.0116", "name": "Silygamma 150mg", "nameKana": "シリガンマ", "activeIngredient": "Silymarin", "content": "150 mg", "usage": "内服", "origin": "ドイツ", "indication": "肝機能改善（慢性肝炎等の補助療法）"}, {"id": 178, "group": "肝臓・腎臓・泌尿器", "code": "22.NT.0417", "name": "Xatral XL", "nameKana": "ザートラルXL", "activeIngredient": "Alfuzosin", "content": "10mg", "usage": "内服", "origin": "フランス", "indication": "前立腺肥大症に伴う排尿障害"}, {"id": 179, "group": "神経", "code": "22.NT.0462", "name": "Betaserc 24mg", "nameKana": "ベタセルク", "activeIngredient": "Betahistine Mesilate", "content": "24 mg", "usage": "内服", "origin": "フランス", "indication": "めまい（メニエール病等）"}, {"id": 180, "group": "神経", "code": "23.NT.0725", "name": "Bilomag (Ginkgo biloba 80mg)", "nameKana": "ビロマグ", "activeIngredient": "Ginkgo Biloba 80mg", "content": "80 mg", "usage": "内服", "origin": "ポーランド", "indication": "脳循環改善（記憶力・集中力サポート）"}, {"id": 181, "group": "神経", "code": "22.NT.0394", "name": "Drexler", "nameKana": "ドレクスラー", "activeIngredient": "Zopiclon", "content": "7,5mg", "usage": "内服", "origin": "ベトナム", "indication": "不眠症（睡眠導入）"}, {"id": 182, "group": "神経", "code": "22.NT.0400", "name": "Fluzinstad 5", "nameKana": "フルジンスタッド", "activeIngredient": "Flunarizin", "content": "5mg", "usage": "内服", "origin": "ベトナム", "indication": "めまい、片頭痛予防"}, {"id": 183, "group": "神経", "code": "22.NT.0396", "name": "Lyrica", "nameKana": "リリカ", "activeIngredient": "Pregabalin", "content": "75mg", "usage": "内服", "origin": "ドイツ", "indication": "神経障害性疼痛、線維筋痛症、てんかん"}, {"id": 184, "group": "神経", "code": "22.NT.0034", "name": "Magne B6 Corbiere", "nameKana": "マグネB6コルビエール", "activeIngredient": "Magnesi lactat dihydrat, pyridoxin hydroclori, magnesi pidolat", "content": "470mg/ 5mg", "usage": "内服", "origin": "ベトナム", "indication": "マグネシウム欠乏（疲労・筋けいれん、ビタミンB6配合）"}, {"id": 185, "group": "神経", "code": "DT05440", "name": "Mimosa", "nameKana": "ミモザ", "activeIngredient": "Củ Bình vôi, lá sen, Lá vông nem, Lạc tiên, Trinh nữ", "content": "", "usage": "内服", "origin": "ベトナム", "indication": "不眠・不安の緩和（鎮静作用のある生薬サプリメント）"}, {"id": 186, "group": "神経", "code": "22.NT.0395", "name": "Neuractine 2mg", "nameKana": "ニューラクチン", "activeIngredient": "Eszopiclone 2 mg", "content": "2mg", "usage": "内服", "origin": "ベトナム", "indication": "不眠症（睡眠導入）"}, {"id": 187, "group": "神経", "code": "DT05385", "name": "Pracetam 800mg", "nameKana": "プラセタム", "activeIngredient": "Piracetam 800mg", "content": "800 mg", "usage": "内服", "origin": "ベトナム", "indication": "脳機能改善（認知機能低下、めまい等）"}, {"id": 188, "group": "神経", "code": "22.NT.0572", "name": "Rotunda", "nameKana": "ロツンダ", "activeIngredient": "Rotundin", "content": "30mg", "usage": "内服", "origin": "ベトナム", "indication": "鎮痛・鎮静（疼痛・不眠）"}, {"id": 189, "group": "神経", "code": "22.NT.0405", "name": "Seroquel XR", "nameKana": "セロクエルXR", "activeIngredient": "Quetiapine", "content": "50mg", "usage": "内服", "origin": "アメリカ", "indication": "統合失調症、双極性障害"}, {"id": 190, "group": "神経", "code": "22.NT.0047", "name": "Stugeron", "nameKana": "ステュゲロン", "activeIngredient": "Cinnarizin", "content": "25mg", "usage": "内服", "origin": "タイ", "indication": "めまい（前庭機能障害）"}, {"id": 191, "group": "神経", "code": "22.NT.0398", "name": "Sulpiride", "nameKana": "スルピリド", "activeIngredient": "Sulpiride", "content": "50mg", "usage": "内服", "origin": "ベトナム", "indication": "うつ病、統合失調症、めまい"}, {"id": 192, "group": "神経", "code": "DT05441", "name": "Synapain 75", "nameKana": "シナペイン", "activeIngredient": "Pregabalin 75mg", "content": "75mg", "usage": "内服", "origin": "ベトナム", "indication": "神経障害性疼痛、線維筋痛症、てんかん"}, {"id": 193, "group": "神経", "code": "22.NT.0294", "name": "Tanakan (Ginkgo Biloba extract 40mg)", "nameKana": "タナカン", "activeIngredient": "Ginkgo Biloba", "content": "40mg", "usage": "内服", "origin": "フランス", "indication": "脳循環改善（記憶力・集中力サポート）"}, {"id": 194, "group": "神経", "code": "22.NT.0016", "name": "Tanganil", "nameKana": "タンガニール", "activeIngredient": "Acetyl leucin", "content": "500mg", "usage": "内服", "origin": "フランス", "indication": "めまい（内耳性めまい）"}, {"id": 195, "group": "眼科", "code": "22.NT.0718", "name": "Alegysal", "nameKana": "アレジサル", "activeIngredient": "Pemirolast", "content": "0.1%-5ml", "usage": "外用", "origin": "日本", "indication": "アレルギー性鼻炎、アレルギー性結膜炎"}, {"id": 196, "group": "眼科", "code": "22.NT.0680", "name": "Kary Uni", "nameKana": "カリユニ", "activeIngredient": "Pirenoxine", "content": "0,005%", "usage": "Nhỏ hai mắt", "origin": "日本", "indication": "白内障進行予防（点眼）"}, {"id": 197, "group": "眼科", "code": "22.NT.0056", "name": "Nước muối nhỏ mắt", "nameKana": "生理食塩水点眼", "activeIngredient": "Natri clorid", "content": "0,9% - 10ml", "usage": "点眼", "origin": "ベトナム", "indication": "創傷洗浄・点滴用など（生理食塩水）"}, {"id": 198, "group": "眼科", "code": "22.NT.0538", "name": "Sancoba", "nameKana": "サンコバ", "activeIngredient": "Cyanocobalamin", "content": "1mg/5ml", "usage": "Nhỏ hai mắt", "origin": "日本", "indication": "末梢神経障害（ビタミンB12製剤）"}, {"id": 199, "group": "眼科", "code": "22.NT.0058", "name": "Sanlein", "nameKana": "サンレイン", "activeIngredient": "Hyaluronate Sodium", "content": "0,1% - 5ml", "usage": "Nhỏ hai mắt", "origin": "日本", "indication": "ドライアイ（点眼）"}, {"id": 200, "group": "眼科", "code": "22.NT.0663", "name": "TobraDex", "nameKana": "トブラデックス", "activeIngredient": "Tobramycin, Dexamethasone", "content": "0,3%; 0,1%-5ml", "usage": "Nhỏ hai mắt", "origin": "スイス", "indication": "細菌性眼感染症・炎症（点眼配合剤）"}, {"id": 201, "group": "眼科", "code": "23.NT.0693", "name": "Tobradex (mỡ)", "nameKana": "トブラデックス", "activeIngredient": "Tobramycin, Dexamethasone", "content": "3mg/1mg - 3,5g", "usage": "点眼", "origin": "スイス", "indication": "細菌性眼感染症・炎症（点眼配合剤）"}, {"id": 202, "group": "眼科", "code": "22.NT.0689", "name": "Tobrex", "nameKana": "トブレックス", "activeIngredient": "Tobramycin", "content": "3mg/ml - 5ml", "usage": "Nhỏ hai mắt", "origin": "スイス", "indication": "細菌性眼感染症（点眼）"}, {"id": 203, "group": "抗真菌剤", "code": "22.NT.0051", "name": "Calcrem", "nameKana": "カルクリーム", "activeIngredient": "Clotrimazol", "content": "1% - 15g", "usage": "Dùng ngoài", "origin": "インド", "indication": "皮膚・腟の真菌感染症"}, {"id": 204, "group": "抗真菌剤", "code": "22.NT.0667", "name": "Canesten cream", "nameKana": "カネステン", "activeIngredient": "Clotrimazol", "content": "10mg/g-20g", "usage": "Bôi", "origin": "インド", "indication": "皮膚・腟の真菌感染症"}, {"id": 205, "group": "抗真菌剤", "code": "22.NT.0503", "name": "Diflucan 150mg", "nameKana": "ジフルカン", "activeIngredient": "Fluconazol", "content": "150mg", "usage": "Uống", "origin": "フランス", "indication": "真菌感染症（カンジダ症等）"}, {"id": 206, "group": "抗真菌剤", "code": "DT05387", "name": "Raxnazole 100mg", "nameKana": "ラクナゾール", "activeIngredient": "Itraconazol", "content": "100mg", "usage": "Uống,", "origin": "インド", "indication": "真菌感染症（皮膚真菌症、爪白癬等）"}, {"id": 207, "group": "抗真菌剤", "code": "22.NT.0071", "name": "Sporal", "nameKana": "スポラノックス", "activeIngredient": "Itraconazol", "content": "100mg", "usage": "Uống", "origin": "タイ", "indication": "真菌感染症（皮膚真菌症、爪白癬等）"}, {"id": 208, "group": "外用剤", "code": "24.NT.0775", "name": "Betadine 30ml", "nameKana": "ベタジン", "activeIngredient": "Povidone iodine", "content": null, "usage": "外用", "origin": "キプロス", "indication": "皮膚・粘膜の消毒"}, {"id": 209, "group": "外用剤", "code": "22.NT.0126", "name": "Betadine sát khuẩn 125ml", "nameKana": "ベタジン", "activeIngredient": "Povidon Iod", "content": null, "usage": "外用", "origin": "キプロス", "indication": "皮膚・粘膜の消毒"}, {"id": 210, "group": "外用剤", "code": "22.NT.0086", "name": "Cao dán Gel Salonsip", "nameKana": "サロンシップ", "activeIngredient": "Methyl salicylate, Eucalyptus oil, Menthol", "content": "", "usage": "貼付", "origin": "ベトナム", "indication": "筋肉痛・関節痛（外用鎮痛消炎剤）"}, {"id": 211, "group": "外用剤", "code": "22.NT.0087", "name": "Cao dán Salonpas", "nameKana": "サロンパス", "activeIngredient": "Methyl salicylate, Eucalyptus oil, Menthol", "content": "", "usage": "貼付", "origin": "ベトナム", "indication": "筋肉痛・関節痛（外用鎮痛消炎剤）"}, {"id": 212, "group": "外用剤", "code": "22.NT.0410", "name": "Fucicort -15g", "nameKana": "フシコート", "activeIngredient": "Fucidic acid, Betamethasone", "content": "20mg/1mg", "usage": "外用", "origin": "アイルランド", "indication": "細菌感染を伴う皮膚炎（外用配合剤）"}, {"id": 213, "group": "外用剤", "code": "22.NT.0600.", "name": "Gentri-sone 20g", "nameKana": "ゲントリゾン", "activeIngredient": "Betamethason, Clotrimazol, Gentamicin", "content": "", "usage": "外用", "origin": "韓国", "indication": "細菌・真菌混合感染を伴う皮膚炎（外用配合剤）"}, {"id": 214, "group": "外用剤", "code": "DT05475", "name": "SALONSIP", "nameKana": "サロンシップ", "activeIngredient": "Menthol natural, Camphor, Glycol salicylate, Tocopheryl Acetate", "content": "", "usage": "貼付", "origin": "ベトナム", "indication": "筋肉痛・関節痛（外用鎮痛消炎剤）"}, {"id": 215, "group": "サプリメント", "code": "24.NT.0012", "name": "Farzincol 10 mg kẽm", "nameKana": "ファーザインコール", "activeIngredient": "Kẽm gluconate", "content": "Zinc 10mg (từ zinc gluconate 70mg)", "usage": "内服", "origin": "ベトナム", "indication": "亜鉛欠乏（味覚障害・免疫サポート）"}, {"id": 216, "group": "サプリメント", "code": "22.NT.0025", "name": "Briozcal", "nameKana": "ブリオズカル", "activeIngredient": "Calci, Vitamin D3", "content": "1250mg/ 125IU", "usage": "内服", "origin": "オーストラリア", "indication": "骨粗鬆症予防（カルシウム・ビタミンD補給）"}, {"id": 217, "group": "サプリメント", "code": "DT5490", "name": "Brivita Vitamin D3 ( lọ 60 viên)", "nameKana": "ブリビタ", "activeIngredient": "", "content": "", "usage": "内服", "origin": "オーストラリア", "indication": ""}, {"id": 218, "group": "サプリメント", "code": "DT05451", "name": "Calcitriol 0.25 mcg", "nameKana": "カルシトリオール", "activeIngredient": "Calcitriol 0.25 mcg", "content": "0.25 mcg", "usage": "内服", "origin": "ベトナム", "indication": "腎性骨異栄養症・骨粗鬆症（活性型ビタミンD3製剤）"}, {"id": 219, "group": "サプリメント", "code": "22.NT.0694.", "name": "Cardioton", "nameKana": "カルジオトン", "activeIngredient": "CoQ10, Vitamin E", "content": "30mg, 6,71mg", "usage": "内服", "origin": "オーストラリア", "indication": "抗酸化サプリメント（疲労・心機能サポート）"}, {"id": 220, "group": "サプリメント", "code": "CN00038", "name": "DRIMY (Multivitamin và khoáng chất)", "nameKana": "ドリミー", "activeIngredient": "", "content": "", "usage": "内服", "origin": "ベトナム", "indication": ""}, {"id": 221, "group": "サプリメント", "code": "22.NT.0031", "name": "Enat 400 UI (H/30v)", "nameKana": "エナート", "activeIngredient": "Vitamin E 400UI", "content": "", "usage": "内服", "origin": "タイ", "indication": "抗酸化サプリメント（ビタミンE補給）"}, {"id": 222, "group": "サプリメント", "code": "22.NT.0514", "name": "Kali Clorid 500mg", "nameKana": "塩化カリウム", "activeIngredient": "Potassium chloride", "content": "500mg", "usage": "内服", "origin": "ベトナム", "indication": "低カリウム血症"}, {"id": 223, "group": "サプリメント", "code": "22.NT.0386", "name": "Methycobal 500mcg", "nameKana": "メチコバール", "activeIngredient": "Mecobalamin", "content": "500mcg", "usage": "内服", "origin": "日本", "indication": "末梢神経障害（ビタミンB12製剤）"}, {"id": 224, "group": "サプリメント", "code": "23.NT.0740", "name": "NextG Cal", "nameKana": "ネクストジーカル", "activeIngredient": "Canxi, vitamin D3", "content": "", "usage": "内服", "origin": "オーストラリア", "indication": "骨粗鬆症予防（カルシウム・ビタミンD補給）"}, {"id": 225, "group": "サプリメント", "code": "22.NT.0676", "name": "Scanneuron (B1+B6+B12)", "nameKana": "スキャンニューロン", "activeIngredient": "Thiamin nitrat (Vitamin B1), Pyridoxin hydroclorid (vitamin B6), Cyanocobalamin (vitamin B12)", "content": "100mg/200mg/200mg", "usage": "内服", "origin": "ベトナム", "indication": "末梢神経障害・神経痛（ビタミンB群製剤）"}, {"id": 226, "group": "サプリメント", "code": "22.NT.0477", "name": "Tardyferon B9", "nameKana": "タルディフェロンB9", "activeIngredient": "Ferrous Sulfate/ Acid folic", "content": "50mg", "usage": "内服", "origin": "フランス", "indication": "鉄欠乏性貧血予防（妊婦等の鉄・葉酸補給）"}, {"id": 227, "group": "その他", "code": "22.NT.0006", "name": "Daflon 500mg", "nameKana": "ダフロン", "activeIngredient": "Diosmin, Hesperidin", "content": "", "usage": "内服", "origin": "フランス", "indication": "静脈還流不全（下肢のむくみ・だるさ）、痔核"}, {"id": 228, "group": "その他", "code": "22.NT.0094", "name": "Decolgen ND", "nameKana": "デコルゲン", "activeIngredient": "Paracetamol, Pseudoephedrin", "content": "500mg/ 30mg", "usage": "内服", "origin": "ベトナム", "indication": "感冒症状（解熱鎮痛＋鼻閉改善配合薬）"}, {"id": 229, "group": "その他", "code": "22.NT.0626", "name": "Drosperin 28v/h", "nameKana": "ドロスペリン", "activeIngredient": "Drospirenon, Ethinyl estradiol", "content": "3mg/0,03mg", "usage": "内服", "origin": "チリ", "indication": "経口避妊"}, {"id": 230, "group": "その他", "code": "22.NT.0099", "name": "Efferalgan Sủi", "nameKana": "エフェラルガン", "activeIngredient": "Paracetamol", "content": "500mg", "usage": "内服", "origin": "フランス", "indication": "疼痛・発熱"}, {"id": 231, "group": "その他", "code": "22.NT.518", "name": "Levothyrox 100mcg", "nameKana": "レボチロックス", "activeIngredient": "Levothyroxin", "content": "100mcg", "usage": "内服", "origin": "ドイツ", "indication": "甲状腺機能低下症"}, {"id": 232, "group": "その他", "code": "22.NT.0519.", "name": "Levothyrox 50mcg", "nameKana": "レボチロックス", "activeIngredient": "Levothyroxin", "content": "50mcg", "usage": "内服", "origin": "ドイツ", "indication": "甲状腺機能低下症"}, {"id": 233, "group": "その他", "code": "22.NT.0004", "name": "Oresol 245 HG", "nameKana": "オレゾール", "activeIngredient": "Natri clorid, Natri citrat, Glucose, Kali clorid", "content": "27,9g", "usage": "内服", "origin": "ベトナム", "indication": "脱水症の水分・電解質補給（経口補水塩ORS）"}, {"id": 234, "group": "その他", "code": "22.NT.0107", "name": "Panadol", "nameKana": "パナドール", "activeIngredient": "Paracetamol", "content": "500mg", "usage": "内服", "origin": "ベトナム", "indication": "疼痛・発熱"}, {"id": 235, "group": "その他", "code": "22.NT.0692", "name": "Panadol Extra", "nameKana": "パナドールエキストラ", "activeIngredient": "Paracetamol, Cafein", "content": "500mg/ 65mg", "usage": "内服", "origin": "ベトナム", "indication": "疼痛・発熱（カフェイン配合鎮痛薬）"}, {"id": 236, "group": "その他", "code": "22.NT.0454", "name": "Ultracet", "nameKana": "ウルトラセット", "activeIngredient": "Tramadol HCL/ Paracetamol", "content": "37,5 mg/ 325 mg", "usage": "内服", "origin": "ベルギー", "indication": "中等度から高度の疼痛"}, {"id": 237, "group": "その他", "code": "DT05443", "name": "Viagra 50mg H/4 viên", "nameKana": "バイアグラ", "activeIngredient": "Sildenafil 50mg", "content": "50mg", "usage": "内服", "origin": "フランス", "indication": "勃起不全（ED）"}, {"id": 238, "group": "機能性食品", "code": "CN00047", "name": "Armolipid Plus (hộp 20 viên)", "nameKana": "アルモリピッドプラス", "activeIngredient": "", "content": "", "usage": "内服", "origin": "イタリア", "indication": ""}, {"id": 239, "group": "機能性食品", "code": "CN00051", "name": "Bổ Thận Tohchukasou premium", "nameKana": "トウチュウカソウプレミアム", "activeIngredient": "Đông trùng hạ thảo, Nấm linh chi đỏ, Sữa ong chúa, và Coenzyme Q10", "content": "", "usage": "内服", "origin": "", "indication": "滋養強壮サプリメント（冬虫夏草・霊芝・ローヤルゼリー等配合）"}, {"id": 240, "group": "機能性食品", "code": "CN00045", "name": "Cebrium (H 30V)", "nameKana": "セブリウム", "activeIngredient": "", "content": "", "usage": "内服", "origin": "オーストラリア", "indication": ""}, {"id": 241, "group": "機能性食品", "code": "CN114", "name": "CEREBIO (Hộp 30 gói)", "nameKana": "セレビオ", "activeIngredient": "Men vi sinh", "content": "", "usage": "内服", "origin": "オランダ", "indication": "整腸剤（プロバイオティクス）"}, {"id": 242, "group": "機能性食品", "code": "22.NT.0002", "name": "Enterogermina 2 tỷ - 5ml", "nameKana": "エンテロジェルミナ", "activeIngredient": "Bào tử kháng đa kháng sinh Bacillus clausii", "content": "", "usage": "内服", "origin": "イタリア", "indication": "整腸（下痢・腸内細菌叢の改善、プロバイオティクス）"}, {"id": 243, "group": "機能性食品", "code": "22.NT.0132", "name": "Estromineral (H30V)", "nameKana": "エストロミネラル", "activeIngredient": "Lactobacillus, Calcium, Vitamin D3, Tinh chất mầm đậu nành, Equisetum", "content": "", "usage": "内服", "origin": "イタリア", "indication": "骨盤底・更年期サポート（乳酸菌・カルシウム配合サプリメント）"}, {"id": 244, "group": "機能性食品", "code": "CN00037", "name": "Eye Lux (H30v)", "nameKana": "アイラックス", "activeIngredient": "Kẽm, Lutein (Xanthophyll), Retinol (Vitamin A), Vitamin B1 (Thiamine), Vitamin B12 (Cyanocobalamin, Mecobalamin), Vitamin B6 (Pyridoxine hydrochloride), Vitamin E (Alpha Tocopherol), Beta-carotene, Zeaxanthin, Selen", "content": "", "usage": "内服", "origin": "フランス", "indication": "眼疾患予防・栄養補給（亜鉛・ルテイン・ビタミン配合サプリメント）"}, {"id": 245, "group": "機能性食品", "code": "54", "name": "Gamucid-  H/20 gói", "nameKana": "ガムシド", "activeIngredient": "Natri Alginate\nMucopolysaccharides HMW (Dịch chiết cây xương rồng và oliu)\nKali bicarbonate\nCalcium carbonate\nNatri bicarbonate", "content": "", "usage": "内服", "origin": "イタリア", "indication": "胃食道逆流症・胸やけ（アルギン酸配合の制酸・粘膜保護剤）"}, {"id": 246, "group": "機能性食品", "code": "CN108", "name": "Kanzou Ukon ( Lọ)", "nameKana": "カンゾウウコン", "activeIngredient": "", "content": "", "usage": "内服", "origin": "日本", "indication": ""}, {"id": 247, "group": "機能性食品", "code": "CN00048", "name": "Livaform (H60v) (Silymarin 125mg)", "nameKana": "リバフォーム", "activeIngredient": "Silybum marianum khô, Cao khô Actiso, taurin, ...", "content": "", "usage": "内服", "origin": "オーストラリア", "indication": "肝機能サポート（肝臓保護サプリメント）"}, {"id": 248, "group": "機能性食品", "code": "CN00098", "name": "Melatonin 5mg", "nameKana": "メラトニン", "activeIngredient": "Melatonin", "content": "5mg", "usage": "内服", "origin": "アメリカ", "indication": "不眠症（睡眠導入）"}, {"id": 249, "group": "機能性食品", "code": "22.T.0148", "name": "NATTO ICHOU ( Lọ 90 viên)", "nameKana": "ナットウイチョウ", "activeIngredient": "Nattokinase 3000FU, DHA, EPA, Chiết xuất lá Ichou (Ginkgo Biloba), Chiết xuất tiêu đen Bioperine", "content": "", "usage": "内服", "origin": "日本", "indication": "血流改善サプリメント（血栓予防・記憶力サポート）"}, {"id": 250, "group": "機能性食品", "code": "22.NT.0527..", "name": "Okinawa Kassou Fucoidan (lọ 150 viên)", "nameKana": "沖縄褐藻フコイダン", "activeIngredient": "Chiết xuất Fucoidan, gelatin 283mg", "content": "", "usage": "内服", "origin": "日本", "indication": "免疫サポート（フコイダン配合サプリメント）"}, {"id": 251, "group": "機能性食品", "code": "CN110", "name": "OMEGA-3 Fish Oil 1000mg -New Zealand (Lọ/60V)", "nameKana": "オメガ3フィッシュオイル", "activeIngredient": "", "content": "", "usage": "内服", "origin": "ニュージーランド", "indication": ""}, {"id": 252, "group": "機能性食品", "code": "CN00033", "name": "Omega 3 Japan  (H/90 viên)", "nameKana": "オメガ3", "activeIngredient": "", "content": "", "usage": "内服", "origin": "日本", "indication": ""}, {"id": 253, "group": "機能性食品", "code": "CN00100", "name": "Omega 3 USA Hộp 100v (new)", "nameKana": "オメガ3", "activeIngredient": "", "content": "", "usage": "内服", "origin": "アメリカ", "indication": ""}, {"id": 254, "group": "医療機器", "code": "DT05433", "name": "Acuaiss Drop 15ml", "nameKana": "アクアイス", "activeIngredient": "Natri hyaluronate", "content": "", "usage": "点眼", "origin": "スペイン", "indication": "ドライアイ（点眼）"}, {"id": 255, "group": "医療機器", "code": "DT05465", "name": "Băng chun", "nameKana": "弾性包帯", "activeIngredient": "", "content": "", "usage": "外用", "origin": "", "indication": ""}, {"id": 256, "group": "医療機器", "code": "CN111", "name": "Bình rửa mũi Hyper (Mã mới)", "nameKana": "ハイパー鼻洗浄", "activeIngredient": "", "content": "", "usage": "点鼻", "origin": "ベトナム", "indication": ""}, {"id": 257, "group": "医療機器", "code": "CN00054", "name": "Dung dịch vệ sinh PROBIWELL", "nameKana": "プロビウェル", "activeIngredient": "", "content": "", "usage": "外用", "origin": "ブルガリア", "indication": ""}, {"id": 258, "group": "医療機器", "code": "DT05371", "name": "Hemoclin 37G", "nameKana": "ヘモクリン", "activeIngredient": "", "content": "", "usage": "外用", "origin": "オランダ", "indication": ""}, {"id": 259, "group": "医療機器", "code": "22.NT.0534.", "name": "Hydramed night sensitive", "nameKana": "ハイドラメッド", "activeIngredient": "Vitamin A palmitate", "content": "5g", "usage": "Tra mắt", "origin": "ベトナム", "indication": "ビタミンA欠乏の補給"}, {"id": 260, "group": "医療機器", "code": "DT05400", "name": "Máy Đo Huyết áp HEM-6161", "nameKana": "血圧計HEM-6161", "activeIngredient": "", "content": "", "usage": null, "origin": "日本", "indication": ""}, {"id": 261, "group": "医療機器", "code": "CN00040", "name": "Máy Massager MẮT-IHEAT Masager model E-04", "nameKana": "アイヒートマッサージャー", "activeIngredient": "", "content": "", "usage": null, "origin": "中国", "indication": ""}, {"id": 262, "group": "医療機器", "code": "22.NT.0563", "name": "Nociceptol 120ml (gel bôi giảm đau)", "nameKana": "ノシセプトール", "activeIngredient": "Cỏ đuôi ngựa, cây Vuốt quỷ", "content": null, "usage": "外用", "origin": "フランス", "indication": "関節痛・炎症（生薬系関節サプリメント）"}, {"id": 263, "group": "医療機器", "code": "22.NT.0014", "name": "Nova 1947 microclismi", "nameKana": "ノヴァ1947", "activeIngredient": "Glycerol + camomile extract glycolic + mallow fluid extract", "content": "9g", "usage": "Thụt", "origin": "アルゼンチン", "indication": "皮膚の保湿・鎮静（保湿クリーム成分）"}, {"id": 264, "group": "医療機器", "code": "22.NT.0013", "name": "Nova 1947 microclismi", "nameKana": "ノヴァ1947", "activeIngredient": "Glycerol + camomile extract glycolic + mallow fluid extract", "content": "3g", "usage": "Thụt", "origin": "アルゼンチン", "indication": "皮膚の保湿・鎮静（保湿クリーム成分）"}, {"id": 265, "group": "医療機器", "code": "DT5493", "name": "PAPILOCARE", "nameKana": "パピロケア", "activeIngredient": "Hyaluronic acid niosomes, β-glucan niosomes, Centella asiatica phytosome, Coriolus Versicolor, chiết xuất cây Neem, BioEcolia®-alpha-oligoglucan và Aloevera", "content": "", "usage": "外用", "origin": "スペイン", "indication": "皮膚の保湿・エイジングケア（化粧品成分）"}, {"id": 266, "group": "医療機器", "code": "DT05466", "name": "Que thử thai", "nameKana": "妊娠検査薬", "activeIngredient": "", "content": "", "usage": "外用", "origin": "ベトナム", "indication": ""}, {"id": 267, "group": "医療機器", "code": "CN00102", "name": "Sinogel 3ml", "nameKana": "シノジェル", "activeIngredient": "", "content": "", "usage": "注射", "origin": "イタリア", "indication": ""}, {"id": 268, "group": "医療機器", "code": "CN00101", "name": "Sinovial HL 64 2ml", "nameKana": "シノビアルHL", "activeIngredient": "", "content": "", "usage": "注射", "origin": "イタリア", "indication": ""}, {"id": 269, "group": "医療機器", "code": "DT05406", "name": "Tonimer lab NOMAL spray 125ml", "nameKana": "トニメールノーマル", "activeIngredient": "Nước biển sâu  Đẳng trương tinh khiết, vô trùng (300mOsm - 0,9%)", "content": "", "usage": "鼻洗浄", "origin": "イタリア", "indication": "鼻腔洗浄（海水系点鼻洗浄液）"}, {"id": 270, "group": "医療機器", "code": "22.NT.0527", "name": "VISMED", "nameKana": "ビスメッド", "activeIngredient": "Natri hyaluronate", "content": "0,3ml", "usage": "Nhỏ hai mắt", "origin": "スイス", "indication": "ドライアイ（点眼）"}, {"id": 271, "group": "医療機器", "code": "DT05486", "name": "Vớ y khoa ĐÙI", "nameKana": "医療用弾性ストッキング大腿", "activeIngredient": "", "content": "", "usage": "外用", "origin": "アメリカ", "indication": ""}, {"id": 272, "group": "医療機器", "code": "CN00099", "name": "Vớ y khoa GỐI", "nameKana": "医療用弾性ストッキング膝", "activeIngredient": "", "content": "", "usage": "外用", "origin": "アメリカ", "indication": ""}, {"id": 273, "group": "化粧品", "code": "CN00029", "name": "Banobagi", "nameKana": "バノバギ", "activeIngredient": "", "content": "", "usage": "外用", "origin": "韓国", "indication": ""}];
+const GROUP_ORDER = ["循環器", "消化器", "抗生剤・抗ウイルス剤", "呼吸器・アレルギー", "整形", "産婦人科", "肝臓・腎臓・泌尿器", "神経", "眼科", "抗真菌剤", "外用剤", "サプリメント", "その他", "機能性食品", "医療機器", "化粧品"];
+
+const state = { query: "", activeGroup: null };
+
+const chipsEl = document.getElementById("chips");
+const listEl = document.getElementById("list");
+const searchEl = document.getElementById("search");
+const clearBtn = document.getElementById("clearBtn");
+const resultCountEl = document.getElementById("resultCount");
+const topbarEl = document.getElementById("topbar");
+const backdropEl = document.getElementById("backdrop");
+const sheetEl = document.getElementById("sheet");
+const sheetBodyEl = document.getElementById("sheetBody");
+
+function normalize(s) {
+  return (s || "").toLowerCase();
+}
+
+// ひらがな入力でもカタカナ表記の薬品名を検索できるよう、ひらがなをカタカナに変換する
+function toKatakana(s) {
+  return (s || "").replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
+}
+
+function groupCounts() {
+  const counts = {};
+  for (const d of DRUGS) counts[d.group] = (counts[d.group] || 0) + 1;
+  return counts;
+}
+
+function renderChips() {
+  const counts = groupCounts();
+  const frag = document.createDocumentFragment();
+
+  const allChip = document.createElement("button");
+  allChip.className = "chip" + (state.activeGroup === null ? " active" : "");
+  allChip.innerHTML = `すべて <span class="n">${DRUGS.length}</span>`;
+  allChip.onclick = () => { state.activeGroup = null; renderChips(); renderList(); };
+  frag.appendChild(allChip);
+
+  for (const g of GROUP_ORDER) {
+    if (!counts[g]) continue;
+    const chip = document.createElement("button");
+    chip.className = "chip" + (state.activeGroup === g ? " active" : "");
+    chip.innerHTML = `${g} <span class="n">${counts[g]}</span>`;
+    chip.onclick = () => { state.activeGroup = (state.activeGroup === g ? null : g); renderChips(); renderList(); };
+    frag.appendChild(chip);
+  }
+  chipsEl.innerHTML = "";
+  chipsEl.appendChild(frag);
+}
+
+function matchesQuery(d, q, qKana) {
+  if (!q) return true;
+  return normalize(d.name).includes(q) ||
+    normalize(d.nameKana).includes(qKana) ||
+    normalize(d.activeIngredient).includes(q) ||
+    normalize(d.indication).includes(q);
+}
+
+function filteredDrugs() {
+  const q = normalize(state.query.trim());
+  const qKana = normalize(toKatakana(state.query.trim()));
+  return DRUGS.filter(d => (state.activeGroup === null || d.group === state.activeGroup) && matchesQuery(d, q, qKana));
+}
+
+function rowHtml(d) {
+  return `<div class="row" data-id="${d.id}">
+    <div class="name">${escapeHtml(d.name)}</div>
+    ${d.nameKana ? `<div class="kana">${escapeHtml(d.nameKana)}</div>` : ""}
+    ${d.activeIngredient ? `<div class="active-ing">${escapeHtml(d.activeIngredient)}</div>` : ""}
+    ${d.indication ? `<div class="indication">${escapeHtml(d.indication)}</div>` : ""}
+    ${state.activeGroup === null ? `<div class="group-tag">${escapeHtml(d.group)}</div>` : ""}
+  </div>`;
+}
+
+function escapeHtml(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+function renderList() {
+  const results = filteredDrugs();
+  const q = state.query.trim();
+
+  if (results.length === 0) {
+    listEl.innerHTML = `<div class="empty">該当する薬剤が見つかりません。</div>`;
+    resultCountEl.textContent = "";
+    return;
+  }
+
+  if (q || state.activeGroup !== null) {
+    resultCountEl.textContent = `${results.length}件`;
+  } else {
+    resultCountEl.textContent = `${DRUGS.length}件の薬剤`;
+  }
+
+  if (q) {
+    // 検索中はグループ分けせずフラットに表示
+    listEl.innerHTML = results.map(rowHtml).join("");
+  } else {
+    const byGroup = {};
+    for (const d of results) (byGroup[d.group] = byGroup[d.group] || []).push(d);
+    const order = state.activeGroup ? [state.activeGroup] : GROUP_ORDER;
+    let html = "";
+    for (const g of order) {
+      const items = byGroup[g];
+      if (!items || !items.length) continue;
+      html += `<div class="section-head">${escapeHtml(g)}(${items.length})</div>`;
+      html += items.map(rowHtml).join("");
+    }
+    listEl.innerHTML = html;
+  }
+
+  listEl.querySelectorAll(".row").forEach(el => {
+    el.addEventListener("click", () => openSheet(Number(el.dataset.id)));
+  });
+}
+
+function fieldHtml(label, value, extraClass) {
+  if (!value) return "";
+  return `<div class="field ${extraClass || ""}">
+    <div class="label">${label}</div>
+    <div class="value">${escapeHtml(value)}</div>
+  </div>`;
+}
+
+function openSheet(id) {
+  const d = DRUGS.find(x => x.id === id);
+  if (!d) return;
+  sheetBodyEl.innerHTML = `
+    <div class="sheet-tag">${escapeHtml(d.group)}</div>
+    <h2>${escapeHtml(d.name)}</h2>
+    ${d.nameKana ? `<div class="kana">${escapeHtml(d.nameKana)}</div>` : ""}
+    ${fieldHtml("適応疾患", d.indication, "indication")}
+    ${fieldHtml("有効成分", d.activeIngredient)}
+    ${fieldHtml("含有量", d.content)}
+    ${fieldHtml("使用方法", d.usage)}
+    ${fieldHtml("原産国", d.origin)}
+    ${fieldHtml("薬品コード", d.code)}
+  `;
+  backdropEl.classList.add("open");
+  sheetEl.classList.add("open");
+}
+
+function closeSheet() {
+  backdropEl.classList.remove("open");
+  sheetEl.classList.remove("open");
+}
+
+backdropEl.addEventListener("click", closeSheet);
+
+searchEl.addEventListener("input", () => {
+  state.query = searchEl.value;
+  clearBtn.classList.toggle("show", state.query.length > 0);
+  renderList();
+});
+clearBtn.addEventListener("click", () => {
+  searchEl.value = "";
+  state.query = "";
+  clearBtn.classList.remove("show");
+  searchEl.focus();
+  renderList();
+});
+
+window.addEventListener("scroll", () => {
+  topbarEl.classList.toggle("scrolled", window.scrollY > 2);
+}, { passive: true });
+
+renderChips();
+renderList();
+</script>
