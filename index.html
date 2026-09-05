@@ -20,6 +20,8 @@
     --shadow: 0 -8px 30px rgba(15, 35, 28, 0.18);
     --star: #B8790D;
     --star-ink: #FFFFFF;
+    --oos: #B23A34;
+    --oos-bg: #F7E7E6;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
@@ -37,6 +39,8 @@
       --shadow: 0 -8px 30px rgba(0, 0, 0, 0.5);
       --star: #F2B84B;
       --star-ink: #241900;
+      --oos: #E8877F;
+      --oos-bg: #3A1F1D;
     }
   }
   :root[data-theme="dark"] {
@@ -54,6 +58,8 @@
     --shadow: 0 -8px 30px rgba(0, 0, 0, 0.5);
     --star: #F2B84B;
     --star-ink: #241900;
+    --oos: #E8877F;
+    --oos-bg: #3A1F1D;
   }
 
   * { box-sizing: border-box; }
@@ -233,7 +239,13 @@
     gap: 8px;
   }
   .row .name { font-size: 15.5px; font-weight: 650; }
-  .star-btn {
+  .row-icons {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .star-btn, .check-btn {
     flex: 0 0 auto;
     border: none;
     background: none;
@@ -245,6 +257,7 @@
     color: var(--line);
   }
   .star-btn.on { color: var(--star); }
+  .check-btn.on { color: var(--oos); }
   .row .kana { font-size: 12px; color: var(--ink-muted); }
   .row .active-ing { font-size: 12.5px; color: var(--ink-muted); }
   .row .indication {
@@ -258,6 +271,27 @@
   .row .group-tag {
     font-size: 11px;
     color: var(--ink-muted);
+    margin-top: 1px;
+  }
+  .row.out-of-stock .name {
+    color: var(--oos);
+    text-decoration: line-through;
+    text-decoration-thickness: 1.5px;
+  }
+  .row.out-of-stock .kana,
+  .row.out-of-stock .active-ing,
+  .row.out-of-stock .indication {
+    color: var(--oos);
+    opacity: 0.75;
+  }
+  .oos-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--oos);
+    background: var(--oos-bg);
+    border-radius: 999px;
+    padding: 2px 9px;
     margin-top: 1px;
   }
 
@@ -336,17 +370,29 @@
     font-size: 13px;
     color: var(--ink-muted);
   }
-  .sheet-star {
+  .sheet-icons {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 10px;
+  }
+  .sheet-star, .sheet-check {
     flex: 0 0 auto;
     border: none;
     background: none;
-    margin-top: 10px;
     font-size: 26px;
     line-height: 1;
     cursor: pointer;
     color: var(--line);
   }
   .sheet-star.on { color: var(--star); }
+  .sheet-check.on { color: var(--oos); }
+  .sheet-body h2.out-of-stock {
+    color: var(--oos);
+    text-decoration: line-through;
+    text-decoration-thickness: 1.5px;
+  }
 
   .field {
     padding: 12px 0;
@@ -500,6 +546,24 @@ function toggleStar(id) {
   saveStarred();
 }
 
+const OOS_KEY = "saiyouyaku_outofstock_v1";
+function loadOutOfStock() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(OOS_KEY) || "[]");
+    return new Set(raw);
+  } catch (e) {
+    return new Set();
+  }
+}
+function saveOutOfStock() {
+  localStorage.setItem(OOS_KEY, JSON.stringify(Array.from(outOfStock)));
+}
+const outOfStock = loadOutOfStock();
+function toggleOutOfStock(id) {
+  if (outOfStock.has(id)) outOfStock.delete(id); else outOfStock.add(id);
+  saveOutOfStock();
+}
+
 const CUSTOM_KEY = "saiyouyaku_custom_v1";
 function loadCustomDrugs() {
   try {
@@ -593,14 +657,19 @@ function filteredDrugs() {
 
 function rowHtml(d) {
   const on = starred.has(d.id);
-  return `<div class="row" data-id="${d.id}">
+  const oos = outOfStock.has(d.id);
+  return `<div class="row${oos ? " out-of-stock" : ""}" data-id="${d.id}">
     <div class="row-head">
       <div class="name">${escapeHtml(d.name)}</div>
-      <button class="star-btn${on ? " on" : ""}" data-star-id="${d.id}" aria-label="よく使う薬剤としてマーク">${on ? "★" : "☆"}</button>
+      <div class="row-icons">
+        <button class="check-btn${oos ? " on" : ""}" data-check-id="${d.id}" aria-label="在庫なしとしてマーク">${oos ? "☑" : "☐"}</button>
+        <button class="star-btn${on ? " on" : ""}" data-star-id="${d.id}" aria-label="よく使う薬剤としてマーク">${on ? "★" : "☆"}</button>
+      </div>
     </div>
     ${d.nameKana ? `<div class="kana">${escapeHtml(d.nameKana)}</div>` : ""}
     ${d.activeIngredient ? `<div class="active-ing">${escapeHtml(d.activeIngredient)}</div>` : ""}
     ${d.indication ? `<div class="indication">${escapeHtml(d.indication)}</div>` : ""}
+    ${oos ? `<div class="oos-badge">在庫なし</div>` : ""}
     ${state.activeGroup === null ? `<div class="group-tag">${escapeHtml(d.group)}</div>` : ""}
   </div>`;
 }
@@ -659,6 +728,14 @@ function renderList() {
       renderList();
     });
   });
+  listEl.querySelectorAll(".check-btn").forEach(el => {
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const id = Number(el.dataset.checkId);
+      toggleOutOfStock(id);
+      renderList();
+    });
+  });
 }
 
 function fieldHtml(label, value, extraClass) {
@@ -673,14 +750,19 @@ function openSheet(id) {
   const d = DRUGS.find(x => x.id === id);
   if (!d) return;
   const on = starred.has(d.id);
+  const oos = outOfStock.has(d.id);
   sheetBodyEl.innerHTML = `
     <div class="sheet-title-row">
       <div>
         <div class="sheet-tag">${escapeHtml(d.group)}</div>
-        <h2>${escapeHtml(d.name)}</h2>
+        <h2${oos ? ` class="out-of-stock"` : ""}>${escapeHtml(d.name)}</h2>
         ${d.nameKana ? `<div class="kana">${escapeHtml(d.nameKana)}</div>` : ""}
+        ${oos ? `<div class="oos-badge">在庫なし</div>` : ""}
       </div>
-      <button class="sheet-star${on ? " on" : ""}" id="sheetStarBtn" aria-label="よく使う薬剤としてマーク">${on ? "★" : "☆"}</button>
+      <div class="sheet-icons">
+        <button class="sheet-check${oos ? " on" : ""}" id="sheetCheckBtn" aria-label="在庫なしとしてマーク">${oos ? "☑" : "☐"}</button>
+        <button class="sheet-star${on ? " on" : ""}" id="sheetStarBtn" aria-label="よく使う薬剤としてマーク">${on ? "★" : "☆"}</button>
+      </div>
     </div>
     ${fieldHtml("適応疾患", d.indication, "indication")}
     ${fieldHtml("日本の類似薬品名", d.japanBrand)}
@@ -698,12 +780,19 @@ function openSheet(id) {
     renderList();
     openSheet(id);
   });
+  document.getElementById("sheetCheckBtn").addEventListener("click", () => {
+    toggleOutOfStock(d.id);
+    renderList();
+    openSheet(id);
+  });
   if (d.custom) {
     document.getElementById("deleteCustomBtn").addEventListener("click", () => {
       customDrugs = customDrugs.filter(x => x.id !== d.id);
       saveCustomDrugs();
       starred.delete(d.id);
       saveStarred();
+      outOfStock.delete(d.id);
+      saveOutOfStock();
       refreshDrugs();
       renderChips();
       renderList();
