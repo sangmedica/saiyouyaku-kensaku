@@ -304,6 +304,16 @@
     padding: 2px 9px;
     margin-top: 1px;
   }
+  .new-notice {
+    margin: 8px 16px 4px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--surface-alt);
+    border: 1px solid var(--line);
+    color: var(--ink-muted);
+    font-size: 12px;
+    line-height: 1.5;
+  }
 
   .empty {
     padding: 60px 24px;
@@ -701,9 +711,15 @@ function escapeHtml(s) {
   }[c]));
 }
 
+const NEW_ONLY_NOTICE = `<div class="new-notice">
+  この一覧の薬剤情報はこの端末のブラウザにのみ保存されており、Claudeからは直接見えません。
+  「情報収集して」とご依頼の際は、ここに表示されている薬品名をお伝えください。
+</div>`;
+
 function renderList() {
   const results = filteredDrugs();
   const q = state.query.trim();
+  const notice = state.newOnly ? NEW_ONLY_NOTICE : "";
 
   if (results.length === 0) {
     let msg = "該当する薬剤が見つかりません。";
@@ -712,7 +728,7 @@ function renderList() {
     } else if (state.newOnly) {
       msg = "「+」ボタンから薬剤を追加すると、ここに一覧表示されます。";
     }
-    listEl.innerHTML = `<div class="empty">${msg}</div>`;
+    listEl.innerHTML = `${notice}<div class="empty">${msg}</div>`;
     resultCountEl.textContent = "";
     return;
   }
@@ -725,12 +741,12 @@ function renderList() {
 
   if (q) {
     // 検索中はグループ分けせずフラットに表示
-    listEl.innerHTML = results.map(rowHtml).join("");
+    listEl.innerHTML = notice + results.map(rowHtml).join("");
   } else {
     const byGroup = {};
     for (const d of results) (byGroup[d.group] = byGroup[d.group] || []).push(d);
     const order = state.activeGroup ? [state.activeGroup] : GROUP_ORDER;
-    let html = "";
+    let html = notice;
     for (const g of order) {
       const items = byGroup[g];
       if (!items || !items.length) continue;
