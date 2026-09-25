@@ -239,6 +239,8 @@
     gap: 8px;
   }
   .row .name { font-size: 15.5px; font-weight: 650; }
+  .copy-name { cursor: pointer; }
+  .copy-name:hover { text-decoration: underline; text-decoration-style: dotted; text-decoration-color: var(--ink-muted); }
   .row-icons {
     flex: 0 0 auto;
     display: flex;
@@ -313,6 +315,31 @@
     color: var(--ink-muted);
     font-size: 12px;
     line-height: 1.5;
+  }
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: max(24px, calc(24px + env(safe-area-inset-bottom)));
+    transform: translate(-50%, 12px);
+    background: var(--ink);
+    color: var(--bg);
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 40;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    max-width: 80vw;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
   }
 
   .empty {
@@ -690,7 +717,7 @@ function rowHtml(d) {
   const oos = outOfStock.has(d.id);
   return `<div class="row${oos ? " out-of-stock" : ""}" data-id="${d.id}">
     <div class="row-head">
-      <div class="name">${escapeHtml(d.name)}</div>
+      <div class="name copy-name" data-copy-id="${d.id}" title="クリックしてコピー">${escapeHtml(d.name)}</div>
       <div class="row-icons">
         <button class="check-btn${oos ? " on" : ""}" data-check-id="${d.id}" aria-label="在庫なしとしてマーク">${oos ? "☑" : "☐"}</button>
         <button class="star-btn${on ? " on" : ""}" data-star-id="${d.id}" aria-label="よく使う薬剤としてマーク">${on ? "★" : "☆"}</button>
@@ -709,6 +736,50 @@ function escapeHtml(s) {
   return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   }[c]));
+}
+
+let toastTimer = null;
+function showToast(msg) {
+  let toast = document.getElementById("toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "toast";
+    toast.className = "toast";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), 1600);
+}
+
+function copyToClipboardFallback(text) {
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e) {
+    return false;
+  }
+}
+
+function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(() => showToast(`「${text}」をコピーしました`))
+      .catch(() => {
+        showToast(copyToClipboardFallback(text) ? `「${text}」をコピーしました` : "コピーに失敗しました");
+      });
+  } else {
+    showToast(copyToClipboardFallback(text) ? `「${text}」をコピーしました` : "コピーに失敗しました");
+  }
 }
 
 const NEW_ONLY_NOTICE = `<div class="new-notice">
@@ -776,6 +847,14 @@ function renderList() {
       renderList();
     });
   });
+  listEl.querySelectorAll(".copy-name").forEach(el => {
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const id = Number(el.dataset.copyId);
+      const d = DRUGS.find(x => x.id === id);
+      if (d) copyToClipboard(d.name);
+    });
+  });
 }
 
 function fieldHtml(label, value, extraClass) {
@@ -795,7 +874,7 @@ function openSheet(id) {
     <div class="sheet-title-row">
       <div>
         <div class="sheet-tag">${escapeHtml(d.group)}</div>
-        <h2${oos ? ` class="out-of-stock"` : ""}>${escapeHtml(d.name)}</h2>
+        <h2 class="copy-name${oos ? " out-of-stock" : ""}" id="sheetNameEl" title="クリックしてコピー">${escapeHtml(d.name)}</h2>
         ${d.nameKana ? `<div class="kana">${escapeHtml(d.nameKana)}</div>` : ""}
         ${oos ? `<div class="oos-badge">在庫なし</div>` : ""}
         ${d.newlyAdded ? `<div class="new-badge">🆕 新規追加(情報収集待ち)</div>` : ""}
@@ -822,6 +901,9 @@ function openSheet(id) {
       </div>
     ` : ""}
   `;
+  document.getElementById("sheetNameEl").addEventListener("click", () => {
+    copyToClipboard(d.name);
+  });
   document.getElementById("sheetStarBtn").addEventListener("click", () => {
     toggleStar(d.id);
     renderChips();
